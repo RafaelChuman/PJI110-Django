@@ -6,6 +6,11 @@ body {
     border-top: 0px;
 }
 
+.imgLogo{
+    height:96px;
+    width: 96px;
+}
+
 main
 {
     background-color: #fafafa;
