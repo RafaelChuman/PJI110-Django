@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+    
+    {% load static %}
+    
+    <link rel="stylesheet" type="text/css" href="{% static 'PJI110/site.css' %}" />
+</head>
+
+<body>
+
+
+<nav>
+    <div class="navClass">
+        <div style="height:96px; width: 96px;">
+            <img alt="1º B Av Ex" class="s4Iyt" src="{% static 'PJI110/Logo_1bavex.png' %}" >
+        </div>
+        <div style="height:96px; width: calc(60% - 192px - 40px); ">
+        </div>
+        <div style="height:96px; width: 96px; ">
+            <img alt="1º B Av Ex" class="s4Iyt" src="{% static 'PJI110/Logo_1bavex.png' %}" >
+        </div>
+    </div>                        
+</nav>
+
+<main>
+    <div class="Bodysize">
+        <div class="divSeparador">
+            <div class="MenuBar" role="tablist">
+                <a role="tab" tabindex="0" {% block MenubarHome %}{% endblock %} href="{% url 'home' %}">
+                    <span >HOME</span>                    
+                </a>
+                <a role="tab" tabindex="0" {% block MenubarMiltiares %}{% endblock %} href="{% url 'militares' %}">
+                    <span >MILITARES</span>                
+                </a>
+                <a role="tab" tabindex="0" {% block MenubarDispensa %}{% endblock %} href="{% url 'dispensa' %}">
+                    <span >DISPENSA</span>                
+                </a>
+                <a role="tab" tabindex="0" {% block MenubarEscala %}{% endblock %} href="{% url 'escala' %}">
+                    <span >ESCALA</span>                
+                </a>
+                <a role="tab" tabindex="0" {% block MenubarMatriz %}{% endblock %} href="{% url 'matriz' %}">
+                    <span >MATRIZ</span>                    
+                </a>
+            </div>
+        </div>
+
+        <div class="divSeparador">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+    </div>
+</main>   
+
+<footer class="MenuBar">
+    <p>PJI110-0003-SÃO JOSÉ DOS CAMPOS-Grupo-005 © 2021</p>
+</footer>
+
+</body>
+</html>
