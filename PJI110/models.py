@@ -9,7 +9,7 @@ class SU(models.Model):
     Nome_SU = models.CharField(max_length=20)
 
 class  PostGrad(models.Model):
-    Nomde_PG = models.CharField(max_length=10)
+    Nome_PG = models.CharField(max_length=10)
 
 class Militar(models.Model):
     NomeG_Mil = models.CharField(max_length=20)

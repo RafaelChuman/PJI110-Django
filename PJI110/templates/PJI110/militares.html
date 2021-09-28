@@ -9,5 +9,30 @@ class="a-selected"
 {% endblock %}
 
 {% block content %}
-<p>Militares page for the Visual Studio Code Django tutorial.</p>
+
+
+{% if militarList %}
+    <table>
+        <thead>
+        <tr>
+            <th>P/G</th>
+            <th>Nome Guerra</th>
+            <th>SU</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for militar in militarList %}
+            <tr>
+                <td>{{ militar.Id_SU.Nome_SU}}</td>
+                <td>{{ militar.NomeG_Mil}}</td>
+                <td>{{ militar.Id_PG.Nome_PG}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Não Existe nenhum militar cadastrado no Sistema.</p>
+{% endif %}
+
+
 {% endblock %}
