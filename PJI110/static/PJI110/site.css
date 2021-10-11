@@ -1,5 +1,6 @@
 body {
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height: 18px;
     margin: 0;
     padding: 0;
     border: 0;
@@ -71,6 +72,7 @@ a{
     border: 1px solid #dbdbdb;
     min-width: 640px;
     min-height: 750px;
+    text-align: center;
 }
 
 .Bodysize{
@@ -84,24 +86,129 @@ a{
 }
 
 
-tr:hover{
-    background-color:#fafafa;
+tr:nth-child(even){
+    background-color: #fafafa;
 }
 
-tr:nth-child(even){
-    background-color: #f2f2f2
+tr:hover{
+    background-color:#f2f2f2;
 }
+
+.TableButton{
+    padding: 0px;
+    margin: 0px 0 0px;
+}
+
+button
+{
+    cursor: pointer;
+    padding: 8px;
+    justify-content: center;
+    align-items: center;
+    background-color: #fafafa;
+    border: 1px solid #dbdbdb;
+    border-radius: 4px;
+    color: rgba(var(--f75,38,38,38),1);
+    margin: 10px 0 10px;
+    font-weight: 600;
+}
+h2{
+    font-weight: 300;
+    font-size: 28px;
+    line-height: 32px;
+    margin: 10px 0 10px;
+    color: #262626;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.divMaisAcoes{
+    -webkit-box-pack: center;
+    justify-content: center;
+    background-color: rgba(var(--f23,255,255,255),1);
+    border-radius: 12px;
+    max-height: 100%;
+    overflow: hidden;
+    width: 400px;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    background-color:transparent;
+    border-radius: 4px;
+    bottom: 0;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    left: 0;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    position: fixed;
+    right: 0;
+    -webkit-tap-highlight-color: #000;
+    top: 0;
+    z-index: 100;
+    min-width: 736px
+}
+
+
+table
+{
+    border: 1px solid #dbdbdb;   
+    text-align: center;   
+    margin-right: auto;
+    margin-left: auto; 
+    border-spacing: 0px;
+}
+
 
 th {
-    background-color: #4CAF50;
+    background-color: #4682B4;
     color: white;
+    padding: 5px 10px 5px 10px;  
 }
 
-table, th, td {
-    border: 1px solid #262626;
-    border-bottom: 1px solid #262626;
-    border-collapse: collapse;
-    text-align: center;
-    vertical-align: center;
-    padding: 10px 10px 10px 10px;
- }
+td
+{
+    padding: 5px 10px 5px 10px;  
+}
+
+label{
+
+    color: #262626;
+    padding-right: 32px;
+    text-align: right;
+    margin-top: 6px;
+    position: relative;
+
+    font-size: 16px; 
+    font-weight: 600; 
+    line-height: 18px; 
+    margin-top: 6px;
+}
+
+input, select{
+    background: 0 0;
+    border: 1px solid #dbdbdb;
+    border-radius: 3px;
+    box-sizing: border-box;
+    color: #262626;
+    font-size: 16px;
+    height: 32px;
+    padding: 0 10px;
+    text-align: left;
+}
+
+aside{
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 20px;
+    padding-left: 25%;
+    padding-right: 25%;
+    text-align: left;
+}

@@ -1,0 +1,46 @@
+{% extends "PJI110/MasterPage.html" %}
+{% block title %}
+Adicionar Novo Militar
+{% endblock %}
+{% block content %}
+<form action="" method="post">
+    
+    {% csrf_token %}
+    <aside>
+        <h2>Insira um novo Militar<br></br></h2>
+    </aside>
+    <aside>
+        <label>Posto/Graduação</label>
+        {{  form.Id_PG }}
+    </aside>
+    <aside>
+        <label>Nome de Guerra</label>
+        {{  form.NomeG_Mil }}
+    </aside>
+    <aside>
+        <label>Nome Completo</label>
+        {{  form.Nome_Mil }}
+    </aside>
+    <aside>
+        <label>Data Promoção</label>
+        {{  form.DtProm_Mil }}
+    </aside>
+    <aside>
+        <label>Data de Paça</label>
+        {{  form.DtPrac_Mil }}
+    </aside>
+    <aside>
+        <label>Data de Nascimento</label>
+        {{  form.DtNsc_Mil }}
+    </aside>
+    <aside>
+        <label>Sub Unidade</label>
+        {{  form.Id_SU }}
+    </aside>
+    <aside>
+        <button  type="submit" id="Salvar" name="Salvar" value="Salvar">
+            Salvar
+        </button>
+    </aside>
+</form>    
+{% endblock %}

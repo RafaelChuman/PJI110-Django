@@ -19,6 +19,8 @@ urlpatterns = [
     path("militares/", views.getdata, name="militares"),
     path("matriz/", views.matriz, name="matriz"),
     path("dispensa/", views.dispensa, name="dispensa"),
+    path("militarAdd/<id>", views.militarAdd, name="militarAdd"),
+    path("militarHidden/", views.militarAdd, name="militarHidden"),
     ]
 
 urlpatterns += staticfiles_urlpatterns()

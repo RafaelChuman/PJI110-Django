@@ -8,8 +8,14 @@ from django.utils import timezone
 class SU(models.Model):
     Nome_SU = models.CharField(max_length=20)
 
+    def __str__(self):
+        return self.Nome_SU
+
 class  PostGrad(models.Model):
     Nome_PG = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.Nome_PG
 
 class Militar(models.Model):
     NomeG_Mil = models.CharField(max_length=20)

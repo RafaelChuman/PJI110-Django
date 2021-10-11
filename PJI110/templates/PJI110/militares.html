@@ -9,30 +9,54 @@ class="a-selected"
 {% endblock %}
 
 {% block content %}
+<h2>Militares do 1º B Av Ex</h2>
 
+<form action="" method="get">
+    {% csrf_token %}
 
-{% if militarList %}
-    <table>
-        <thead>
-        <tr>
-            <th>P/G</th>
-            <th>Nome Guerra</th>
-            <th>SU</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for militar in militarList %}
+    {% if militarList %}
+        <table>
+            <thead>
             <tr>
-                <td>{{ militar.Id_SU.Nome_SU}}</td>
-                <td>{{ militar.NomeG_Mil}}</td>
-                <td>{{ militar.Id_PG.Nome_PG}}</td>
+                <th>P/G</th>
+                <th>Nome Guerra</th>
+                <th>Data Promoção</th>
+                <th>Data Praça</th>
+                <th>Data Nascimento</th>
+                <th>SU</th>
+                <th>Editar</th>
             </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>Não Existe nenhum militar cadastrado no Sistema.</p>
-{% endif %}
+            </thead>
+            <tbody>
+            {% for militar in militarList %}
+                <tr>
+                    <td>{{ militar.Id_PG.Nome_PG}}</td>
+                    <td>{{ militar.NomeG_Mil}}</td>
+                    <td>{{ militar.DtProm_Mil | date:"d/m/Y" }}</td>
+                    <td>{{ militar.DtPrac_Mil | date:"d/m/Y" }}</td>
+                    <td>{{ militar.DtNsc_Mil | date:"d/m/Y" }}</td>
+                    <td>{{ militar.Id_SU.Nome_SU}}</td>                
+                    <td>
+                        <button  class="TableButton" type="submit" id="MilitarEdit" name="MilitarEdit" value= {{militar.id}} >
+                            <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Não Existe nenhum militar cadastrado no Sistema.</p>
+    {% endif %}
 
+
+    
+    <button  type="submit" id="MilitarHidden" name="MilitarHidden" value="MilitarHidden">
+        Militares Exluídos
+    </button>
+    <button  type="submit" id="MilitarAdd" name="MilitarAdd" value="MilitarAdd">
+        Adicionar Militar
+    </button>
+</form>
 
 {% endblock %}
