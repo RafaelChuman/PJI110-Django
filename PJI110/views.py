@@ -23,8 +23,6 @@ def militarAdd(request, Id_Mil):
         form =  MilitarForm()
 
     
-
-    # If this is a POST request then process the Form data
     if request.method == 'POST':
         form = MilitarForm(request.POST, instance=militar)
         # Create a form instance and populate it with data from the request (binding):
