@@ -3,5 +3,51 @@
 
 {% endblock %}
 {% block content %}
-Militares Hidden
+<h2>Militares do 1º B Av Ex</h2>
+
+
+    {% csrf_token %}
+
+    {% if militarList %}
+        <table>
+            <thead>
+            <tr>
+                <th>P/G</th>
+                <th>Nome Guerra</th>
+                <th>Data Promoção</th>
+                <th>Data Praça</th>
+                <th>Data Nascimento</th>
+                <th>SU</th>
+                <th>Reativar</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for militar in militarList %}
+                <tr>
+                    <td>{{ militar.Id_PG.Nome_PG}}</td>
+                    <td>{{ militar.NomeG_Mil}}</td>
+                    <td>{{ militar.DtProm_Mil | date:"d/m/Y" }}</td>
+                    <td>{{ militar.DtPrac_Mil | date:"d/m/Y" }}</td>
+                    <td>{{ militar.DtNsc_Mil | date:"d/m/Y" }}</td>
+                    <td>{{ militar.Id_SU.Nome_SU}}</td> 
+                    <form action="" method="get">              
+                        <td>
+                            <button  class="TableButton" type="submit" id="MilitarReact" name="MilitarReact" value= {{militar.id}} >
+                                <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
+                            </button>
+                        </td>
+                    </form>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    
+    
+    {% endif %}
+
+
+
+
+
+
 {% endblock %}

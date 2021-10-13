@@ -18,15 +18,15 @@ class  PostGrad(models.Model):
         return self.Nome_PG
 
 class Militar(models.Model):
-    NomeG_Mil = models.CharField(max_length=20)
-    Nome_Mil = models.CharField(max_length=100)
-    DtNsc_Mil = models.DateField()
-    DtPrac_Mil  = models.DateField()
-    DtProm_Mil = models.DateField()
-    Vsb_Mil = models.BooleanField()
+    NomeG_Mil = models.CharField(null=False, blank=False, max_length=20)
+    Nome_Mil = models.CharField(null=False, blank=False, max_length=100)
+    DtNsc_Mil = models.DateField(null=False, blank=False)
+    DtPrac_Mil  = models.DateField(null=False, blank=False)
+    DtProm_Mil = models.DateField(null=False, blank=False)
+    Vsb_Mil = models.BooleanField(null=True)
 
-    Id_SU = models.ForeignKey(SU, on_delete=models.CASCADE)
-    Id_PG = models.ForeignKey(PostGrad, on_delete=models.CASCADE)
+    Id_SU = models.ForeignKey(SU, null=False, blank=False, on_delete=models.CASCADE)
+    Id_PG = models.ForeignKey(PostGrad, null=False, blank=False, on_delete=models.CASCADE)
 
 class TipoEscala(models.Model):
     Nome_TipEsc = models.CharField(max_length=50)

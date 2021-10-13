@@ -20,7 +20,7 @@ urlpatterns = [
     path("matriz/", views.matriz, name="matriz"),
     path("dispensa/", views.dispensa, name="dispensa"),
     path("militarAdd/<id>", views.militarAdd, name="militarAdd"),
-    path("militarHidden/", views.militarAdd, name="militarHidden"),
+    path("militarHidden/", views.militarHidden, name="militarHidden"),
     ]
 
 urlpatterns += staticfiles_urlpatterns()

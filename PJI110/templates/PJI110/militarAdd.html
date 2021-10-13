@@ -6,6 +6,11 @@ Adicionar Novo Militar
 <form action="" method="post">
     
     {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="text-error">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
     <aside>
         <h2>Insira um novo Militar<br></br></h2>
     </aside>
@@ -37,6 +42,7 @@ Adicionar Novo Militar
         <label>Sub Unidade</label>
         {{  form.Id_SU }}
     </aside>
+    {{ form.Vsb_Mil.as_hidden }}
     <aside>
         <button  type="submit" id="Salvar" name="Salvar" value="Salvar">
             Salvar

@@ -99,6 +99,16 @@ tr:hover{
     margin: 0px 0 0px;
 }
 
+.SaveButton:hover{
+    opacity: 1;
+}
+.SaveButton{
+    border: 1px solid transparent;
+    background-color: #0095f6;
+    color: #fff;
+    opacity: 0.3;
+}
+
 button
 {
     cursor: pointer;
