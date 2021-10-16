@@ -1,16 +1,16 @@
 {% extends "PJI110/MasterPage.html" %}
+
 {% block title %}
-Adicionar Novo Militar
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
 {% endblock %}
+
 {% block content %}
 <form action="" method="post">
     
     {% csrf_token %}
-    {% if form.non_field_errors %}
-    <div class="text-error">
-        {{ form.non_field_errors }}
-    </div>
-    {% endif %}
+
     <aside>
         <h2>Insira um novo Militar<br></br></h2>
     </aside>
@@ -43,10 +43,16 @@ Adicionar Novo Militar
         {{  form.Id_SU }}
     </aside>
     {{ form.Vsb_Mil.as_hidden }}
-    <aside>
-        <button  type="submit" id="Salvar" name="Salvar" value="Salvar">
+    
+        <button class="SaveButton"  type="submit" id="Salvar" name="Salvar" value="Salvar">
             Salvar
         </button>
-    </aside>
+
+        {% if form.non_field_errors %}
+        <div class="text-error">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+   
 </form>    
 {% endblock %}

@@ -9,67 +9,67 @@ class="a-selected"
 {% endblock %}
 
 {% block content %}
-<h2>Militares do 1º B Av Ex</h2>
 
+<aside>
+    <h2>Militares do 1º B Av Ex<br></br></h2>
+</aside> 
 
-    
-
-    {% if militarList %}
-        <table>
-            <thead>
+{% if militarList %}
+    <table>
+        <thead>
+        <tr>
+            <th>P/G</th>
+            <th>Nome Guerra</th>
+            <th>Data Promoção</th>
+            <th>Data Praça</th>
+            <th>Data Nascimento</th>
+            <th>SU</th>
+            <th>Editar</th>
+            <th>Excluir</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for militar in militarList %}
             <tr>
-                <th>P/G</th>
-                <th>Nome Guerra</th>
-                <th>Data Promoção</th>
-                <th>Data Praça</th>
-                <th>Data Nascimento</th>
-                <th>SU</th>
-                <th>Editar</th>
-                <th>Excluir</th>
+                <td>{{ militar.Id_PG.Nome_PG}}</td>
+                <td>{{ militar.NomeG_Mil}}</td>
+                <td>{{ militar.DtProm_Mil | date:"d/m/Y" }}</td>
+                <td>{{ militar.DtPrac_Mil | date:"d/m/Y" }}</td>
+                <td>{{ militar.DtNsc_Mil | date:"d/m/Y" }}</td>
+                <td>{{ militar.Id_SU.Nome_SU}}</td> 
+                <form action="" method="get">  
+                    {% csrf_token %}            
+                    <td>
+                        <button  class="TableButton" type="submit" id="MilitarEdit" name="MilitarEdit" value= {{militar.id}} >
+                            <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
+                        </button>
+                    </td>
+                </form>
+                <form action="" method="get" onsubmit="return confirm('Deseja realmente excluir esse militar ?');">  
+                    {% csrf_token %}
+                    <td>
+                        <button  class="TableButton" type="submit" id="MilitarDel" name="MilitarDel" value= {{militar.id}}> 
+                            <svg aria-label="Editar" color="#B22222" fill="#B22222" role="img" viewBox="0 0 24 24" width="24">
+                                <rect x="8" y="0" width="20" transform="rotate(45)" height="4"></rect>
+                                <rect x="-10" y="-20" width="20" transform="rotate(135)" height="4"></rect>
+                            </svg>
+                        </button>
+                    </td>
+                </form>
             </tr>
-            </thead>
-            <tbody>
-            {% for militar in militarList %}
-                <tr>
-                    <td>{{ militar.Id_PG.Nome_PG}}</td>
-                    <td>{{ militar.NomeG_Mil}}</td>
-                    <td>{{ militar.DtProm_Mil | date:"d/m/Y" }}</td>
-                    <td>{{ militar.DtPrac_Mil | date:"d/m/Y" }}</td>
-                    <td>{{ militar.DtNsc_Mil | date:"d/m/Y" }}</td>
-                    <td>{{ militar.Id_SU.Nome_SU}}</td> 
-                    <form action="" method="get">  
-                        {% csrf_token %}            
-                        <td>
-                            <button  class="TableButton" type="submit" id="MilitarEdit" name="MilitarEdit" value= {{militar.id}} >
-                                <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
-                            </button>
-                        </td>
-                    </form>
-                    <form action="" method="get" onsubmit="return confirm('Deseja realmente excluir esse militar ?');">  
-                        {% csrf_token %}
-                        <td>
-                            <button  class="TableButton" type="submit" id="MilitarDel" name="MilitarDel" value= {{militar.id}}> 
-                                <svg aria-label="Editar" color="#B22222" fill="#B22222" role="img" viewBox="0 0 24 24" width="24">
-                                    <rect x="8" y="0" width="20" transform="rotate(45)" height="4"></rect>
-                                    <rect x="-10" y="-20" width="20" transform="rotate(135)" height="4"></rect>
-                                </svg>
-                            </button>
-                        </td>
-                    </form>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <form action="" method="get"> 
-            {% csrf_token %}
-            <button class="SaveButton"  type="submit" id="MilitarHidden" name="MilitarHidden" value="MilitarHidden">
-                Militares Exluídos
-            </button>
-            <button class="SaveButton" type="submit" id="MilitarAdd" name="MilitarAdd" value="MilitarAdd">
-                Adicionar Militar
-            </button>
-        </form>
-    {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <form action="" method="get"> 
+        {% csrf_token %}
+        <button class="SaveButton"  type="submit" id="MilitarHidden" name="MilitarHidden" value="MilitarHidden">
+            Militares Exluídos
+        </button>
+        <button class="SaveButton" type="submit" id="MilitarAdd" name="MilitarAdd" value="MilitarAdd">
+            Adicionar Militar
+        </button>
+    </form>
+{% endif %}
 
 
 {% endblock %}

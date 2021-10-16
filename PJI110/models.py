@@ -1,3 +1,4 @@
+from _typeshed import Self
 from django.db import models
 from django.db.models.deletion import CASCADE
 from django.db.models.fields import DateField
@@ -28,6 +29,9 @@ class Militar(models.Model):
     Id_SU = models.ForeignKey(SU, null=False, blank=False, on_delete=models.CASCADE)
     Id_PG = models.ForeignKey(PostGrad, null=False, blank=False, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.NomeG_Mil
+
 class TipoEscala(models.Model):
     Nome_TipEsc = models.CharField(max_length=50)
     "Id_Mil = models.ManyToManyField(Militar)"
@@ -48,6 +52,9 @@ class Militar_Tipo(models.Model):
 class Dispensa(models.Model):
     Desc_Disp = models.CharField(max_length=30)
     "Militares = models.ManyToManyField(Militar)"
+
+    def __str__(self) -> str:
+        return self.Desc_Disp
 
 class Militar_Dispensa(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)    

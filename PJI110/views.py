@@ -12,7 +12,7 @@ from django import forms
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from PJI110.formsPadrao import MilitarForm
+from PJI110.forms import MilitarForm
 from PJI110.models import Militar
 from PJI110.models import PostGrad
 from PJI110.models import SU
@@ -36,10 +36,16 @@ def militarDel(request, Id_Mil):
 
 def militarAdd(request, Id_Mil):
     
+    PageTitle = ""
+    
     if Id_Mil != 0:
         militar = get_object_or_404(Militar, pk=Id_Mil) 
         form = MilitarForm(request.POST or None, instance=militar)         
+
+        PageTitle = "Editar " + militar.NomeG_Mil
     else:
+        PageTitle = "Adicionar Novo Militar"
+        
         militar = Militar()
         form = MilitarForm(request.POST or None)
 
@@ -56,7 +62,8 @@ def militarAdd(request, Id_Mil):
             print(form.errors)
 
     context = {
-        'form': form
+        'form': form,
+        'PageTitle': PageTitle
     }
     
     return render(request, "PJI110/militarAdd.html", context)
@@ -76,7 +83,11 @@ def militarHidden(request, *args, **kwargs):
                         militar.Vsb_Mil = True
                         militar.save()
 
-    militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = False).order_by("DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
+                        return HttpResponseRedirect(reverse('militares'))
+
+    militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = False)
+    militarList.order_by.order_by("Id_PG")
+    militarList.order_by("DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
 
     context = {
         "object": militarList
@@ -84,7 +95,7 @@ def militarHidden(request, *args, **kwargs):
         
     return render(request, "PJI110/militarHidden.html", {'militarList':militarList})
    
-def getdata(request, *args, **kwargs):
+def MilitarSearch(request, *args, **kwargs):
     
     if len(request.GET) > 0:
         for action in request.GET:
@@ -100,7 +111,8 @@ def getdata(request, *args, **kwargs):
                         if action == "MilitarHidden":
                             return redirect("../militarHidden")
 
-    militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = True).order_by("DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
+    militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = True)
+    militarList = militarList.order_by("-Id_PG", "DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
             
     return render(request, "PJI110/militares.html", {'militarList':militarList})
 
