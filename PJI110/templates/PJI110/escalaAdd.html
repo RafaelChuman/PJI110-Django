@@ -1,0 +1,59 @@
+{% extends "PJI110/MasterPage.html" %}
+
+{% block title %}
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+    
+    {% csrf_token %}
+
+    <aside>
+        <h2>Relacione os Militares com suas Escalas de Serviço<br></br></h2>
+    </aside>
+    <div class="TwoTables">
+        <div style="width: 40%;">
+            <aside>
+                <label>Selecione os Militares</label>
+                {{  form.Id_Mil }}
+            </aside>
+        </div>
+        <div style="width: 40%;">
+        <aside>
+            <label>Selecione a Escala de Serviço</label>
+            {{  form.Id_TipEsc }}
+        </aside>
+        <aside>
+            <label>Data SV Preta</label>
+            {{  form.DtSv_P_Mil_TipEsc }}
+        </aside>
+        <aside>
+            <label>Total SV Preta</label>
+            {{  form.NumSv_P_Mil_TipEsc }}
+        </aside>
+        <aside>
+            <label>Data SV Vermelha</label>
+            {{  form.DtSv_V_Mil_TipEsc }}
+        </aside>
+        <aside>
+            <label>Total Término</label>
+            {{  form.NumSv_V_Mil_TipEsc }}
+        </aside>
+        </div>
+    </div>   
+    
+    <button class="SaveButton"  type="submit" id="Salvar" name="Salvar" value="Salvar">
+        Salvar
+    </button>
+
+    {% if form.non_field_errors %}
+    <div class="text-error">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+</form>    
+{% endblock %}

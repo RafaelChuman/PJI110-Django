@@ -15,10 +15,12 @@ militar_list_view = views.MilitarListView.as_view(
 
 urlpatterns = [
     path("", views.Home, name="home"),
+    path("escalaAdd/<id>", views.EscalaAdd, name="escalaAdd"),
     path("escala/", views.escala, name="escala"),
     path("militares/", views.MilitarSearch, name="militares"),
     path("matriz/", views.matriz, name="matriz"),
-    path("dispensa/", views.dispensa, name="dispensa"),
+    path("dispensa/", views.dispensaSearch, name="dispensa"),
+    path("dispensaAdd/<id>", views.DispensaAdd, name="dispensaAdd"),
     path("militarAdd/<id>", views.militarAdd, name="militarAdd"),
     path("militarHidden/", views.militarHidden, name="militarHidden"),
     ]

@@ -1,15 +1,18 @@
+from datetime import time
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import fields
 from django.forms.models import ModelForm
 import django.forms.utils
 import django.forms.widgets
+from django.utils.timezone import datetime, now
 
 from PJI110.models import SU
 from PJI110.models import PostGrad
 from PJI110.models import Militar
 from PJI110.models import Dispensa
 from PJI110.models import Militar_Dispensa
+from PJI110.models import Militar_Tipo, TipoEscala, SubTipoEscala
 
 class SUForm(forms.ModelForm):    
     class Meta:
@@ -58,16 +61,20 @@ class MilitarForm(forms.ModelForm):
        else:
            raise forms.ValidationError("Nome de Guerra do Militar Inválido")
 
+class DispensaModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "{}".format(obj.Id_PG.Nome_PG + " " + obj.NomeG_Mil)
+
 class Militar_DispensaForm(forms.ModelForm):
     Id_Disp = forms.ModelChoiceField(queryset=Dispensa.objects.all(), to_field_name="id" )
-    Id_Mil = forms.ModelChoiceField(queryset=Militar.objects.select_related("Id_PG").filter(Vsb_Mil = True), to_field_name="id")
+    Id_Mil = DispensaModelChoiceField(queryset=Militar.objects.select_related("Id_PG").filter(Vsb_Mil = True).order_by("-Id_PG", "NomeG_Mil"), to_field_name="id")
     Begin_Mil_Disp = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}))
     End_Mil_Disp = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}))
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
 
-        super(MilitarForm, self).__init__(*args, **kwargs)
+        super(Militar_DispensaForm, self).__init__(*args, **kwargs)
 
         if instance:
             self.initial['Begin_Mil_Disp'] = self.instance.Begin_Mil_Disp.isoformat()
@@ -77,4 +84,27 @@ class Militar_DispensaForm(forms.ModelForm):
     class Meta:
         model = Militar_Dispensa
         fields = ("Id_Disp","Id_Mil", "Begin_Mil_Disp", "End_Mil_Disp" )
+
+class Militar_TipoForm(forms.ModelForm):
+    Id_Mil = forms.ModelMultipleChoiceField(widget=forms.SelectMultiple(attrs={'class': 'ModelMultipleChoiceField'}), queryset=Militar.objects.all(), to_field_name="id" )
+    Id_TipEsc = forms.ModelChoiceField(queryset=SubTipoEscala.objects.all(), to_field_name="id")
+    DtSv_P_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    NumSv_P_Mil_TipEsc = forms.IntegerField(initial=0)
+    DtSv_V_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    NumSv_V_Mil_TipEsc = forms.IntegerField(initial=0)
+
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(Militar_TipoForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            self.initial['DtSv_P_Mil_TipEsc'] = self.instance.DtSv_P_Mil_TipEsc.isoformat()
+            self.initial['DtSv_V_Mil_TipEsc'] = self.instance.DtSv_V_Mil_TipEsc.isoformat()
+            
+
+    class Meta:
+        model = Militar_Tipo
+        fields = ("Id_Mil","Id_TipEsc", "DtSv_P_Mil_TipEsc", "NumSv_P_Mil_TipEsc", "DtSv_V_Mil_TipEsc", "NumSv_V_Mil_TipEsc")       
 

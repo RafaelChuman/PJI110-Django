@@ -1,0 +1,45 @@
+{% extends "PJI110/MasterPage.html" %}
+
+{% block title %}
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+    
+    {% csrf_token %}
+
+    <aside>
+        <h2>Insira uma nova Dispensa<br></br></h2>
+    </aside>
+    <aside>
+        <label>Selecione o Militar</label>
+        {{  form.Id_Mil }}
+    </aside>
+    <aside>
+        <label>Natureza da Dispensa</label>
+        {{  form.Id_Disp }}
+    </aside>
+    <aside>
+        <label>Data Início</label>
+        {{  form.Begin_Mil_Disp }}
+    </aside>
+    <aside>
+        <label>Data Término</label>
+        {{  form.End_Mil_Disp }}
+    </aside>
+    
+        <button class="SaveButton"  type="submit" id="Salvar" name="Salvar" value="Salvar">
+            Salvar
+        </button>
+
+        {% if form.non_field_errors %}
+        <div class="text-error">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+   
+</form>    
+{% endblock %}

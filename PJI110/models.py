@@ -1,4 +1,3 @@
-from _typeshed import Self
 from django.db import models
 from django.db.models.deletion import CASCADE
 from django.db.models.fields import DateField
@@ -34,20 +33,26 @@ class Militar(models.Model):
 
 class TipoEscala(models.Model):
     Nome_TipEsc = models.CharField(max_length=50)
+    Militares_TipoEscala = models.ManyToManyField(Militar, through="Militar_Tipo")
     "Id_Mil = models.ManyToManyField(Militar)"
+    def __str__(self):
+        return self.Nome_TipEsc
 
 class SubTipoEscala(models.Model):
     Nome_SubTipEsc = models.CharField(max_length=50)
-    Prioridade_SubTipEsc = models.IntegerField
+    Prioridade_SubTipEsc = models.IntegerField()
     Id_TipEsc = models.ForeignKey(TipoEscala, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return self.Nome_SubTipEsc
 
 class Militar_Tipo(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)
     Id_TipEsc = models.ForeignKey(TipoEscala, on_delete=models.CASCADE)
-    DtSv_P_Mil_TipEsc = models.DateField
-    NumSv_P_Mil_TipEsc = models.IntegerField
-    DtSv_V_Mil_TipEsc = models.DateField
-    NumSv_V_Mil_TipEsc = models.IntegerField
+    DtSv_P_Mil_TipEsc = models.DateField()
+    NumSv_P_Mil_TipEsc = models.IntegerField()
+    DtSv_V_Mil_TipEsc = models.DateField()
+    NumSv_V_Mil_TipEsc = models.IntegerField()
 
 class Dispensa(models.Model):
     Desc_Disp = models.CharField(max_length=30)
@@ -59,8 +64,9 @@ class Dispensa(models.Model):
 class Militar_Dispensa(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)    
     Id_Disp = models.ForeignKey(Dispensa, on_delete=models.CASCADE)
-    Begin_Mil_Disp = models.DateField
-    End_Mil_Disp = models.DateField
+    Begin_Mil_Disp = models.DateField(null=False, blank=True, default=timezone.now)
+    End_Mil_Disp = models.DateField(null=False, blank=True, default=timezone.now)
+
     
 class Matriz(models.Model):
     Id_SubTipEsc = models.ForeignKey(SubTipoEscala, on_delete=models.CASCADE)    

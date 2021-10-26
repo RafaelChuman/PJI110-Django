@@ -9,5 +9,106 @@ class="a-selected"
 {% endblock %}
 
 {% block content %}
-<p>Escala page for the Visual Studio Code Django tutorial.</p>
+
+<aside>
+    <h2>Escala dos Militares do 1º B Av Ex<br></br></h2>
+</aside> 
+
+<div class="TwoTables">
+    <div style="width: 55%;">
+        {% if SubTipoEscalaList %}
+            <table>
+                <thead>
+                <tr>
+                    <th>Nome Escala</th>
+                    <th>Prioridade</th>
+                    <th>Editar</th>
+                    <th>Excluir</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for escala in SubTipoEscalaList %}
+                    <tr>
+                        <form action="" method="get" >
+                            <td>
+                                <button  class="inputAsRow" type="submit" id="EscalaSelect" name="EscalaSelect" value= {{escala.Id_TipEsc_id}}> 
+                                    {{ escala.Nome_SubTipEsc}}
+                                </button>
+                            </td>
+                        </form>
+                        <td>{{ escala.Prioridade_SubTipEsc}}</td>
+                        <form action="" method="get">  
+                            {% csrf_token %}            
+                            <td>
+                                <button  class="TableButton" type="submit" id="EscalaEdit" name="EscalaEdit" value= {{escala.Id_TipEsc_id}} >
+                                    <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
+                                </button>
+                            </td>
+                        </form>
+                        <form action="" method="get" onsubmit="return confirm('Deseja realmente excluir esta escalar ?');">  
+                            {% csrf_token %}
+                            <td>
+                                <button  class="TableButton" type="submit" id="EscalaDel" name="EscalaDel" value= {{escala.id}}> 
+                                    <svg aria-label="Editar" color="#B22222" fill="#B22222" role="img" viewBox="0 0 24 24" width="24">
+                                        <rect x="8" y="0" width="20" transform="rotate(45)" height="4"></rect>
+                                        <rect x="-10" y="-20" width="20" transform="rotate(135)" height="4"></rect>
+                                    </svg>
+                                </button>
+                            </td>
+                        </form>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    {% if MilitaresList %}
+        <div style="width: 35%;">
+            <table>
+                <thead>
+                <tr>
+                    <th>P/G</th>
+                    <th>Nome Guerra</th>
+                    <th>SU</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for militar in MilitaresList %}
+                    <tr>
+                        <td>
+                            {{ militar.Id_PG.Nome_PG}}
+                        </td>
+                        <td>
+                            {{ militar.NomeG_Mil}}
+                        </td>                       
+                        <td>
+                            {{ militar.Id_SU.Nome_SU}}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>    
+    {% endif %}
+</div>
+<form action="" method="get"> 
+    {% csrf_token %}
+    <button class="SaveButton"  type="submit" id="EscalaHidden" name="EscalaHidden" value="MilitarHidden">
+        Militares Exluídos
+    </button>
+    <button class="SaveButton" type="submit" id="EscalaAdd" name="EscalaAdd" value="EscalaAdd">
+        Adicionar Militar
+    </button>
+</form>
+
+
+
+<script>
+    function FunctionOnClickEvent(x) {
+        window.location = $(this).data("href");
+    }
+</script>        
+
+
 {% endblock %}

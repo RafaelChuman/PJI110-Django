@@ -11,5 +11,60 @@ class="a-selected"
 
 
 {% block content %}
-<p>Dispensa page for the Visual Studio Code Django tutorial.</p>
+
+<aside>
+    <h2>Militares Dispensados do 1º B Av Ex<br></br></h2>
+</aside> 
+
+{% if DispensaList %}
+    <table>
+        <thead>
+        <tr>
+            <th>P/G</th>
+            <th>Nome Guerra</th>
+            <th>Dispensa</th>
+            <th>Data Início</th>
+            <th>Data Término</th>            
+            <th>Editar</th>
+            <th>Excluir</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for Dispensa in DispensaList %}
+            <tr>
+                <td>{{ Dispensa.Id_Mil.Id_PG.Nome_PG}}</td>
+                <td>{{ Dispensa.Id_Mil.NomeG_Mil}}</td>
+                <td>{{ Dispensa.Id_Disp.Desc_Disp }}</td>
+                <td>{{ Dispensa.Begin_Mil_Disp | date:"d/m/Y" }}</td>
+                <td>{{ Dispensa.End_Mil_Disp | date:"d/m/Y" }}</td>
+                <form action="" method="get">  
+                    {% csrf_token %}            
+                    <td>
+                        <button  class="TableButton" type="submit" id="DispensaEdit" name="DispensaEdit" value= {{Dispensa.id}} >
+                            <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
+                        </button>
+                    </td>
+                </form>
+                <form action="" method="get" onsubmit="return confirm('Deseja realmente excluir esta Dispensa ?');">  
+                    {% csrf_token %}
+                    <td>
+                        <button  class="TableButton" type="submit" id="DispensaDel" name="DispensaDel" value= {{Dispensa.id}}> 
+                            <svg aria-label="Editar" color="#B22222" fill="#B22222" role="img" viewBox="0 0 24 24" width="24">
+                                <rect x="8" y="0" width="20" transform="rotate(45)" height="4"></rect>
+                                <rect x="-10" y="-20" width="20" transform="rotate(135)" height="4"></rect>
+                            </svg>
+                        </button>
+                    </td>
+                </form>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <form action="" method="get"> 
+        <button class="SaveButton" type="submit" id="DispensaAdd" name="DispensaAdd" value="MilitarAdd">
+            Adicionar Dispensa
+        </button>
+    </form>
+{% endif %}
+
 {% endblock %}
