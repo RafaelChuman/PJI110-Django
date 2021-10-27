@@ -1,7 +1,8 @@
 from datetime import time
 from django import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import DisallowedHost, ValidationError
 from django.forms import fields
+from django.forms.forms import Form
 from django.forms.models import ModelForm
 import django.forms.utils
 import django.forms.widgets
@@ -108,3 +109,51 @@ class Militar_TipoForm(forms.ModelForm):
         model = Militar_Tipo
         fields = ("Id_Mil","Id_TipEsc", "DtSv_P_Mil_TipEsc", "NumSv_P_Mil_TipEsc", "DtSv_V_Mil_TipEsc", "NumSv_V_Mil_TipEsc")       
 
+
+class Militar_TipoEditForm(forms.ModelForm):
+    # Id_Mil = forms.ModelMultipleChoiceField(widget=forms.Select(), queryset=Militar.objects.all(), to_field_name="id" )
+    # Id_TipEsc = forms.ModelChoiceField(queryset=TipoEscala.objects.all(), to_field_name="id")
+    DtSv_P_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    NumSv_P_Mil_TipEsc = forms.IntegerField(initial=0)
+    DtSv_V_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    NumSv_V_Mil_TipEsc = forms.IntegerField(initial=0)
+
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(Militar_TipoEditForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            # self.initial['Id_Mil'] = self.instance.Id_Mil
+            # self.initial['Id_TipEsc'] = self.instance.Id_TipEsc
+            self.initial['DtSv_P_Mil_TipEsc'] = self.instance.DtSv_P_Mil_TipEsc.isoformat()
+            self.initial['DtSv_V_Mil_TipEsc'] = self.instance.DtSv_V_Mil_TipEsc.isoformat()
+            # self.fields['Id_Mil'].widget.attrs['disabled'] = 'True'
+            # self.fields['Id_Mil'].required = 'False'
+            # self.fields['Id_TipEsc'].widget.attrs['disabled'] = 'True'
+            # self.fields['Id_TipEsc'].required = 'False'
+            
+    class Meta:
+        model = Militar_Tipo
+        fields = ("DtSv_P_Mil_TipEsc", "NumSv_P_Mil_TipEsc", "DtSv_V_Mil_TipEsc", "NumSv_V_Mil_TipEsc")  
+
+
+class SubTipoEscalaForm(forms.ModelForm):
+    Nome_SubTipEsc = forms.CharField()
+    Prioridade_SubTipEsc = forms.IntegerField()
+    Id_TipEsc =  forms.ModelChoiceField(queryset=TipoEscala.objects.all(), to_field_name="id")
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(SubTipoEscalaForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            self.initial['Nome_SubTipEsc'] = self.instance.Nome_SubTipEsc
+            self.initial['Prioridade_SubTipEsc'] = self.instance.Prioridade_SubTipEsc
+            self.initial['Id_TipEsc'] = self.instance.Id_TipEsc
+
+    class Meta:
+        model = SubTipoEscala
+        fields = ("Nome_SubTipEsc","Prioridade_SubTipEsc", "Id_TipEsc")     

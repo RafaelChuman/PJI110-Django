@@ -31,6 +31,9 @@ class Militar(models.Model):
     def __str__(self):
         return self.NomeG_Mil
 
+    class Meta:
+        ordering = ("-Id_PG", "DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")    
+
 class TipoEscala(models.Model):
     Nome_TipEsc = models.CharField(max_length=50)
     Militares_TipoEscala = models.ManyToManyField(Militar, through="Militar_Tipo")
@@ -46,13 +49,19 @@ class SubTipoEscala(models.Model):
     def __str__(self):
         return self.Nome_SubTipEsc
 
+    class Meta:
+        ordering = ('Id_TipEsc', 'Prioridade_SubTipEsc')    
+
 class Militar_Tipo(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)
     Id_TipEsc = models.ForeignKey(TipoEscala, on_delete=models.CASCADE)
-    DtSv_P_Mil_TipEsc = models.DateField()
-    NumSv_P_Mil_TipEsc = models.IntegerField()
-    DtSv_V_Mil_TipEsc = models.DateField()
-    NumSv_V_Mil_TipEsc = models.IntegerField()
+    DtSv_P_Mil_TipEsc = models.DateField(null=False,blank=True, default=timezone.now)
+    NumSv_P_Mil_TipEsc = models.IntegerField(null=False, blank=True, default=0)
+    DtSv_V_Mil_TipEsc = models.DateField(null=False,blank=True, default=timezone.now)
+    NumSv_V_Mil_TipEsc = models.IntegerField(null=False, blank=True, default=0)
+
+    class Meta:
+        unique_together = ('Id_Mil', 'Id_TipEsc')
 
 class Dispensa(models.Model):
     Desc_Disp = models.CharField(max_length=30)

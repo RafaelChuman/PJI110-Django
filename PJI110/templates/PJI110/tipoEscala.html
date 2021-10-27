@@ -16,20 +16,20 @@ class="a-selected"
 
 <div class="TwoTables">
     <div style="width: 40%;">
-        {% if SubTipoEscalaList %}
+        {% if TipoEscalaList %}
             <table style="margin-right: 0;">
                 <thead>
                 <tr>
-                    <th>Selecione a Escala SV</th>
+                    <th>Selecione o Tipo da Escala</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for escala in SubTipoEscalaList %}
+                {% for TipoEscala in TipoEscalaList %}
                     <tr>
                         <form action="" method="get" >
                             <td>
-                                <button  class="inputAsRow" type="submit" id="EscalaSelect" name="EscalaSelect" value= {{escala.Id_TipEsc_id}}> 
-                                    {{ escala.Nome_SubTipEsc}}
+                                <button  class="inputAsRow" type="submit" id="EscalaSelect" name="EscalaSelect" value= {{TipoEscala.id}}> 
+                                    {{ TipoEscala.Nome_TipEsc}}
                                 </button>
                             </td>
                         </form>
@@ -41,41 +41,37 @@ class="a-selected"
     </div>
 
     <div style="width: 60%;">
-        {% if MilitaresList %}        
+        {% if SubTipoEscalaList %}        
             <table>
                 <thead>
                 <tr>
-                    <th>P/G</th>
-                    <th>Nome Guerra</th>
-                    <th>SU</th>
+                    <th>Nome Escala</th>
+                    <th>Prioridade</th>
                     <th>Editar</th>
                     <th>Excluir</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for militar in MilitaresList %}
+                {% for SubtipoEscala in SubTipoEscalaList %}
                     <tr>
                         <td>
-                            {{ militar.Id_PG.Nome_PG}}
-                        </td>
-                        <td>
-                            {{ militar.NomeG_Mil}}
+                            {{ SubtipoEscala.Nome_SubTipEsc}}
                         </td>                       
                         <td>
-                            {{ militar.Id_SU.Nome_SU}}
+                            {{ SubtipoEscala.Prioridade_SubTipEsc}}
                         </td>
                         <form action="" method="get">  
                             {% csrf_token %}            
                             <td>
-                                <button  class="TableButton" type="submit" id="MilitarEdit" name="MilitarEdit" value= {{militar.id}} >
+                                <button  class="TableButton" type="submit" id="SubtipoEscalaEdit" name="SubtipoEscalaEdit" value= {{SubtipoEscala.id}} >
                                     <svg aria-label="Editar" color="#262626" fill="#262626" role="img" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6.5" cy="12" r="1.5"></circle><circle cx="17.5" cy="12" r="1.5"></circle></svg>
                                 </button>
                             </td>
                         </form>
-                        <form action="" method="get" onsubmit="return confirm('Deseja realmente excluir esta escalar ?');">  
+                        <form action="" method="get" onsubmit="return confirm('Deseja realmente excluir este SubTipo SV?');">  
                             {% csrf_token %}
                             <td>
-                                <button  class="TableButton" type="submit" id="MilitarDel" name="MilitarDel" value= {{militar.id}}> 
+                                <button  class="TableButton" type="submit" id="SubtipoEscalaDel" name="SubtipoEscalaDel" value= {{SubtipoEscala.id}}> 
                                     <svg aria-label="Editar" color="#B22222" fill="#B22222" role="img" viewBox="0 0 24 24" width="24">
                                         <rect x="8" y="0" width="20" transform="rotate(45)" height="4"></rect>
                                         <rect x="-10" y="-20" width="20" transform="rotate(135)" height="4"></rect>
@@ -91,17 +87,12 @@ class="a-selected"
         {% endif %}
     </div>
 </div>
-
+     
 <form action="" method="get"> 
     {% csrf_token %}
-    <button class="SaveButton"  type="submit" id="EscalaMannage" name="EscalaMannage" value="EscalaMannage">
-        Gerenciar Escalas
-    </button>
-    <button class="SaveButton" type="submit" id="EscalaAdd" name="EscalaAdd" value="EscalaAdd">
-        Inserir Militar na Escala
+    <button class="SaveButton" type="submit" id="SubTipoEscalaAdd" name="SubTipoEscalaAdd" value="SubTipoEscalaAdd">
+        Inserir SubTipo Escala
     </button>
 </form>
-     
-
 
 {% endblock %}

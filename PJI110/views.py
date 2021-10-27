@@ -1,3 +1,4 @@
+
 import re
 import sys
 from django.core.checks import messages
@@ -13,7 +14,7 @@ from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from PJI110.forms import Militar_TipoForm, MilitarForm
+from PJI110.forms import Militar_TipoForm, MilitarForm, SubTipoEscalaForm, Militar_TipoEditForm
 from PJI110.forms import Militar_DispensaForm
 from PJI110.models import Militar, PostGrad, SU, TipoEscala
 from PJI110.models import Dispensa, Militar_Dispensa
@@ -33,8 +34,6 @@ def militarDel(request, Id_Mil):
     }
             
     return HttpResponseRedirect(reverse('militares'))
-
-
 
 def militarAdd(request, Id_Mil):
     
@@ -70,9 +69,6 @@ def militarAdd(request, Id_Mil):
     
     return render(request, "PJI110/militarAdd.html", context)
 
-
-
-
 def militarHidden(request, *args, **kwargs):
 
     if len(request.GET) > 0:
@@ -88,7 +84,7 @@ def militarHidden(request, *args, **kwargs):
                         return HttpResponseRedirect(reverse('militares'))
 
     militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = False)
-    militarList = militarList.order_by("-Id_PG", "DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
+
 
     context = {
         "object": militarList
@@ -113,7 +109,7 @@ def MilitarSearch(request, *args, **kwargs):
                             return redirect("../militarHidden")
 
     militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = True)
-    militarList = militarList.order_by("-Id_PG", "DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
+    
             
     context = {
         'militarList':militarList
@@ -124,6 +120,40 @@ def MilitarSearch(request, *args, **kwargs):
 def Home(request):
     return render(request, "PJI110/home.html")
 
+def EscalaDelMil(request, MilId, TipEscID):
+    Militar_Tipo_Object =  Militar_Tipo.objects.get(Id_Mil = MilId, Id_TipEsc = TipEscID)
+    Militar_Tipo_Object.delete()
+
+def escalaEdit(request, id_Militar, id_TipoEscala):
+    
+    PageTitle = ""
+    
+    MilitarTipo_Object = get_object_or_404(Militar_Tipo, Id_Mil = id_Militar, Id_TipEsc = id_TipoEscala) 
+    form = Militar_TipoEditForm(request.POST or None, instance=MilitarTipo_Object) 
+
+
+
+    PageTitle = "Editar " + MilitarTipo_Object.Id_Mil.NomeG_Mil
+
+    if request.method == 'POST':
+        
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+
+            return HttpResponseRedirect(reverse('escala'))
+        else:
+            print(form.errors)
+
+    context = {
+        'form': form,
+        'MilitarTipo_Object':MilitarTipo_Object,
+        'PageTitle': PageTitle
+    }
+    
+    # return HttpResponseRedirect(reverse('escalaEdit', args=(id_Militar,id_TipoEscala,)))
+    return render(request, "PJI110/escalaEdit.html", context)  
 
 def EscalaAdd(request, SubTipEscID):
     
@@ -138,14 +168,15 @@ def EscalaAdd(request, SubTipEscID):
         Id_SubTipoEscalaInstance = SubTipoEscala.objects.get(id = form.data['Id_TipEsc'])
 
         for militar in request.POST.getlist('Id_Mil'):
-            Militar_Tipo.objects.create(
-                Id_Mil = Militar.objects.get(id=militar),
-                Id_TipEsc = Id_SubTipoEscalaInstance.Id_TipEsc,
-                DtSv_P_Mil_TipEsc = form.data['DtSv_P_Mil_TipEsc'],
-                NumSv_P_Mil_TipEsc = form.data['NumSv_P_Mil_TipEsc'],
-                DtSv_V_Mil_TipEsc =form.data['DtSv_V_Mil_TipEsc'],
-                NumSv_V_Mil_TipEsc = form.data['NumSv_V_Mil_TipEsc']
-            )
+            if Militar_Tipo.objects.filter(Id_Mil=militar,Id_TipEsc =  Id_SubTipoEscalaInstance.Id_TipEsc).count() == 0:
+                Militar_Tipo.objects.create(
+                    Id_Mil = Militar.objects.get(id=militar),
+                    Id_TipEsc = Id_SubTipoEscalaInstance.Id_TipEsc,
+                    # DtSv_P_Mil_TipEsc = form.data['DtSv_P_Mil_TipEsc'],
+                    # NumSv_P_Mil_TipEsc = form.data['NumSv_P_Mil_TipEsc'],
+                    # DtSv_V_Mil_TipEsc =form.data['DtSv_V_Mil_TipEsc'],
+                    # NumSv_V_Mil_TipEsc = form.data['NumSv_V_Mil_TipEsc']
+                )
 
         # profile = form.save(commit=False)
         # profile.user = request.user
@@ -168,10 +199,14 @@ def EscalaAdd(request, SubTipEscID):
     
     return render(request, "PJI110/escalaAdd.html", context)
 
-
-def escala(request):
+def escala(request, *args, **kwargs):
     
     MilitaresList = 0
+
+
+    if request.session.get('SubTipoEscalaId') != 0: TipoEscalaId =  request.session.get('SubTipoEscalaId')
+
+    
 
     if len(request.GET) > 0:
         for action in request.GET:
@@ -180,16 +215,20 @@ def escala(request):
                 MilitaresList = MilitaresList.Militares_TipoEscala.all()
                 # MilitaresList = MilitaresList.filter(Id_Mil__Vsb_Mil = True)
                 # filter(Id_TipEsc =  request.GET['EscalaSelect'])
-                MilitaresList = MilitaresList.order_by("-Id_PG", "DtProm_Mil", "DtPrac_Mil", "DtNsc_Mil")
+
+                request.session['SubTipoEscalaId'] = request.GET['EscalaSelect']
             else:
                 if action == "EscalaAdd":
                    return EscalaAdd(request, 0)
-                else:
-                    if action == "EscalaEdit":
-                        return EscalaAdd(request, request.GET['EscalaEdit'])
-                    else:                          
-                        if action == "EscalaDel":
-                            return DispensaDel(request, request.GET['EscalaDel'])
+                else:                          
+                    if action == "EscalaMannage":
+                       return redirect("../tipoEscala")
+                    else:
+                        if action == "MilitarEdit":
+                            return escalaEdit(request, request.GET['MilitarEdit'], TipoEscalaId)             
+                        else:                          
+                            if action == "MilitarDel":
+                                EscalaDelMil(request, request.GET['MilitarDel'], TipoEscalaId)
         
                  
     
@@ -200,9 +239,83 @@ def escala(request):
     context = {             
         'SubTipoEscalaList':SubTipoEscalaList,
         'MilitaresList':MilitaresList,
+        'TipoEscalaId':TipoEscalaId,
     } 
 
     return render(request, "PJI110/escala.html", context)  
+
+def tipoEscalaAdd(request, id_SubtipoEscala):
+    
+    PageTitle = ""
+    
+    if id_SubtipoEscala != 0:
+        SubTipoEscala_Object = get_object_or_404(SubTipoEscala, pk=id_SubtipoEscala) 
+        form = SubTipoEscalaForm(request.POST or None, instance=SubTipoEscala_Object)         
+
+        PageTitle = "Editar " + SubTipoEscala_Object.Nome_SubTipEsc
+    else:
+        PageTitle = "Adicionar Novo SubTipSV"
+        
+        SubTipoEscala_Object = SubTipoEscala()
+        form = SubTipoEscalaForm(request.POST or None)
+
+    
+
+    if request.method == 'POST':
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+
+            return HttpResponseRedirect(reverse('tipoEscala'))
+        else:
+            print(form.errors)
+
+    context = {
+        'form': form,
+        'PageTitle': PageTitle
+    }
+    
+    return render(request, "PJI110/tipoEscalaAdd.html", context)
+
+#Os Parâmetros ARGS e KWARGS são parâmetros Curinga e podem conter qualquer valor
+#Função para Listar Todos os Tipos de Escala de Serviço e Editar Sub Tipos de Escala de Serviço
+def tipoEscala(request, *args, **kwargs):
+    
+    #Inicializando a variável para Listar de Todos os Tipos de Escla de Serviço
+    SubTipoEscalaList = 0
+ 
+    #Verifica se o Evento da Página é o GET. O Método GET é importante, porque todas os botões da página usam o método GET
+    if len(request.GET) > 0:
+
+        for action in request.GET:
+            #Evento de Clicar em um Campo da Tabela para mostrar os SubTipos de Escala de Serviço
+            if action == "EscalaSelect":
+                #O Metodo Objects.Get retorna uma Instância de TipoEscala. Essa Instância é usada para Selecionar os SubTipos de Escala de Serviço
+                SubTipoEscalaList = TipoEscala.objects.get(id =  request.GET['EscalaSelect'])
+                SubTipoEscalaList = SubTipoEscalaList.subtipoescala_set.all()
+            else:
+                if action == "SubTipoEscalaAdd":
+                   return tipoEscalaAdd(request, 0)
+                else:   
+                    if action == "SubtipoEscalaEdit":
+                        return tipoEscalaAdd(request, request.GET['SubtipoEscalaEdit'])                       
+                    else:
+                        if action == "SubtipoEscalaDel":
+                            #Comando para Deletar um SubTipo de Escala de Serviço. O Id é passado pelo Código HTML e Resgatado pelo Método GET
+                            SubTipoEscala.objects.get(id = request.GET['SubtipoEscalaDel']).delete()
+                      
+    #Comando para Selecionar Todos os Tipo de Escala de Serviço    
+    TipoEscalaList = TipoEscala.objects.all()
+
+    #Variável Context Contém Todas as Informações que serão renderizadas no Formulario HTML
+    context = {             
+        'TipoEscalaList':TipoEscalaList,
+        'SubTipoEscalaList':SubTipoEscalaList,
+    } 
+
+    #Método Render força a criação da Página com os dados criados nesta Função
+    return render(request, "PJI110/tipoEscala.html", context)  
 
 def dispensaSearch(request, *args, **kwargs):
     
@@ -227,7 +340,6 @@ def dispensaSearch(request, *args, **kwargs):
 
     return render(request, "PJI110/dispensa.html", context)     
     
-
 def DispensaDel(request, Id_Disp):
     
     if Id_Disp != 0:
@@ -237,8 +349,6 @@ def DispensaDel(request, Id_Disp):
             Militar_DispensaList.delete()
             
     return HttpResponseRedirect(reverse('dispensa'))
-
-
 
 def DispensaAdd(request, Id_Disp):
     
@@ -272,8 +382,6 @@ def DispensaAdd(request, Id_Disp):
     }
     
     return render(request, "PJI110/dispensaAdd.html", context)
-
-
 
 def matriz(request):
     return render(request, "PJI110/matriz.html")       

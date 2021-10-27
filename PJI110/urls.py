@@ -15,6 +15,8 @@ militar_list_view = views.MilitarListView.as_view(
 
 urlpatterns = [
     path("", views.Home, name="home"),
+    path("tipoEscala", views.tipoEscala, name="tipoEscala"),
+    path("escalaEdit/<id_Militar><id_TipoEscala>", views.escalaEdit, name="escalaEdit"),
     path("escalaAdd/<id>", views.EscalaAdd, name="escalaAdd"),
     path("escala/", views.escala, name="escala"),
     path("militares/", views.MilitarSearch, name="militares"),

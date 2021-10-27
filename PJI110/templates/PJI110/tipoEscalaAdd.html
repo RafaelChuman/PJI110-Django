@@ -1,0 +1,41 @@
+{% extends "PJI110/MasterPage.html" %}
+
+{% block title %}
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+    
+    {% csrf_token %}
+
+    <aside>
+        <h2>Sub Tipo Escala de SV<br></br></h2>
+    </aside>
+    <aside>
+        <label>Nome do SV</label>
+        {{  form.Nome_SubTipEsc }}
+    </aside>
+    <aside>
+        <label>Prioridade do SV</label>
+        {{  form.Prioridade_SubTipEsc }}
+    </aside>
+    <aside>
+        <label>Tipo de Serviço</label>
+        {{  form.Id_TipEsc }}
+    </aside>
+    
+        <button class="SaveButton"  type="submit" id="Salvar" name="Salvar" value="Salvar">
+            Salvar
+        </button>
+
+        {% if form.non_field_errors %}
+        <div class="text-error">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+   
+</form>    
+{% endblock %}

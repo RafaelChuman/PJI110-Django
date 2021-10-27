@@ -1,0 +1,63 @@
+{% extends "PJI110/MasterPage.html" %}
+
+{% block title %}
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+    
+    {% csrf_token %}
+
+    <aside>
+        <h2>Edit o Serviço do Militar<br></br></h2>
+    </aside>
+    
+    <aside>
+        <label>Militar</label>
+        {{  MilitarTipo_Object.Id_Mil}}
+    </aside>
+       
+    <aside>
+        <label>Tipo SV</label>
+        {{  MilitarTipo_Object.Id_TipEsc }}
+    </aside>
+    
+    <aside>
+        <label>Data Sv Preta</label>
+        {{  form.DtSv_P_Mil_TipEsc }}
+    </aside>
+
+    <aside>
+        <label>Número SV Preta</label>
+        {{  form.NumSv_P_Mil_TipEsc }}
+    </aside>
+
+    <aside>
+        <label>Data Sv Vermelha</label>
+        {{  form.DtSv_V_Mil_TipEsc }}
+    </aside>
+
+    <aside>
+        <label>Número SV Vermelha</label>
+        {{  form.NumSv_V_Mil_TipEsc }}
+    </aside>
+
+    <aside>
+        <h2><br></br></h2>
+    </aside>
+    
+    <button class="SaveButton"  type="submit" id="Salvar" name="Salvar" value="Salvar">
+        Salvar
+    </button>
+
+    {% if form.non_field_errors %}
+    <div class="text-error">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+</form>    
+{% endblock %}
