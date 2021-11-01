@@ -1,13 +1,84 @@
 {% extends "PJI110/MasterPage.html" %}
 
 {% block title %}
-Matriz
-{% endblock %}
-
-{% block MenubarMatriz %}
-class="a-selected"
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-<p>Matriz page for the Visual Studio Code Django tutorial.</p>
+    
+
+<aside>
+    <h2>{{PageTitle}}</h2>
+</aside>
+
+<form action="" method="get"> 
+    {% csrf_token %} 
+    <aside>
+        <label>Selecione o Mês da Matriz</label>
+        {{MonthOfMatriz.DateOfMatriz}}
+    </aside>
+</form>
+
+<aside>
+  <br></br>
+</aside>
+
+{% if ListDate %}
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                {% if SubTipoEscalaList %}
+                    {% for SubTipoEscala in SubTipoEscalaList %}
+                        <th> {{ SubTipoEscala.Id_SubTipEsc__Nome_SubTipEsc }}</th>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            
+        {% for DateofList in ListDate %}
+        <tr>
+            {% for ItemDate in DateofList %}
+                 
+                    {% if ItemDate|length == 2 %}                           
+                        {% if ItemDate.1 %}
+                            <td style="color: red;">{{ItemDate.0}}</td>
+                        {%else%}
+                            <td>{{ItemDate.0 }}</td>
+                        {%endif%}    
+                    {%else%}
+                        <td>{{ItemDate}}</td>
+                    {%endif%}     
+                                   
+            {% endfor %}
+        </tr>      
+        {% endfor %}
+            
+        </tbody>
+    </table>
+{% endif %}    
+       
+<aside>
+    <h2><br></br></h2>
+</aside>
+
+<form action="" method="get"> 
+    {% csrf_token %}
+    <button class="SaveButton" type="submit" id="MatrizDel" name="MatrizDel" value="MatrizDel">
+        Excluir Matriz
+    </button>
+    <button class="SaveButton"  type="submit" id="MatrizAdd" name="MatrizAdd" value="MatrizAdd">
+        Inserir Matriz
+    </button>
+</form>
+
+{% if form.non_field_errors %}
+<div class="text-error">
+    {{ form.non_field_errors }}
+</div>
+{% endif %}
+   
 {% endblock %}

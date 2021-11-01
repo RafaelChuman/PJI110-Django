@@ -1,8 +1,10 @@
 
+from datetime import timedelta
 import re
 import sys
 from django.core.checks import messages
 from django.forms.fields import NullBooleanField
+from django.forms.forms import Form
 from django.shortcuts import render
 from django.shortcuts import redirect, get_object_or_404
 from django.utils.timezone import datetime, now
@@ -11,14 +13,18 @@ from django.views.generic import ListView
 from django import forms
 from django.http import Http404
 
+from django.db.models.query import QuerySet
+
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from PJI110.forms import Militar_TipoForm, MilitarForm, SubTipoEscalaForm, Militar_TipoEditForm
+from PJI110.forms import MatrizForm, Militar_TipoForm, MilitarForm, SubTipoEscalaForm, Militar_TipoEditForm
 from PJI110.forms import Militar_DispensaForm
+from PJI110.forms import MatrizForm, MonthOfMatrizForm
 from PJI110.models import Militar, PostGrad, SU, TipoEscala
 from PJI110.models import Dispensa, Militar_Dispensa
 from PJI110.models import Militar_Tipo, SubTipoEscala
+from PJI110.models import Matriz 
 
 
 def militarDel(request, Id_Mil):
@@ -383,5 +389,127 @@ def DispensaAdd(request, Id_Disp):
     
     return render(request, "PJI110/dispensaAdd.html", context)
 
+
+def IsHolyday(self, *args, **kwargs):
+
+    if self is None: return False
+
+    if self.weekday() > 4:
+        return True
+    else:
+        return False
+
+def matrizAdd(request, Id_Matriz):
+    PageTitle = 'Add Matriz SV'
+
+    if request.method == 'POST':
+
+
+        form = MatrizForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            DateBegin = form.cleaned_data['DtBegin_Matriz']
+            DateEnd = form.cleaned_data['DtEnd_Matriz']
+            Id_SubTipEsc = form.cleaned_data['Id_SubTipEsc']
+            NumMil_Matriz = form.cleaned_data['NumMil_Matriz']
+
+            while DateBegin <= DateEnd:
+                if Matriz.objects.filter(Id_SubTipEsc=Id_SubTipEsc, Dt_Matriz = DateBegin).count() == 0:
+                    Matriz.objects.create(
+                            Id_SubTipEsc = Id_SubTipEsc,
+                            Dt_Matriz = DateBegin,
+                            NumMil_Matriz = NumMil_Matriz,
+                            IsHolyday_Matriz = IsHolyday(DateBegin)
+                        )
+                DateBegin = DateBegin + timedelta(days=1)     
+
+
+        return HttpResponseRedirect(reverse('matriz'))
+    else:
+        form = MatrizForm()
+
+    context = {          
+        'form':form,
+        'PageTitle': PageTitle
+    } 
+
+    return render(request, "PJI110/matrizAdd.html", context)   
+
+
+def addMonths(dt, months = 0):
+    new_month = months + dt.month
+    year_inc = 0
+    if new_month>12:
+        year_inc +=1
+        new_month -=12
+    return dt.replace(month = new_month, year = dt.year+year_inc)
+
 def matriz(request):
-    return render(request, "PJI110/matriz.html")       
+
+    PageTitle = 'Matriz SV'
+
+    if len(request.GET) > 0:
+        for action in request.GET:
+            if action == "MatrizASearch":
+                MonthOfSearch = request.GET['MatrizASearch']
+                MonthOfMatrix = MonthOfMatrizForm(request.POST or None, instance=MonthOfSearch)
+            else:
+                if action == "MatrizAdd":
+                    return matrizAdd(request, 0)
+                else:
+                    if action == "MatrizEdit":
+                        return matrizAdd(request, request.GET['MatrizEdit'])
+                    # else:                          
+                    #     if action == "MatrizDel":
+                            #return matrizDel(request, request.GET['MatrizDel'])
+    else:
+        MonthOfSearch= datetime.now().month
+        MonthOfMatrix = MonthOfMatrizForm()
+        
+    # DateBegin = datetime(datetime.now().year, MonthOfSearch, 1)
+    # DateEnd =  addMonths(DateBegin, 1)
+
+    DateBegin = datetime(datetime.now().year, MonthOfSearch -1, 1)
+    DateEnd =  addMonths(DateBegin, 1)
+
+    MatrizList = Matriz.objects.filter(Dt_Matriz__range=[DateBegin, DateEnd]).order_by('Dt_Matriz', 'Id_SubTipEsc')
+     
+    SubTipoEscalaList = Matriz.objects.values('Id_SubTipEsc__Nome_SubTipEsc').order_by('Id_SubTipEsc').distinct()
+
+    ListDate = list()
+    ListEscala = list()
+
+    if len(MatrizList) > 0:
+        x = DateBegin
+       
+        while x <= DateEnd:
+
+            ListEscala = list()
+            ListEscala.append(x.strftime("%d-%a"))
+
+            for SubtipItem in SubTipoEscalaList:
+                
+                MatrizFor = MatrizList.filter(Dt_Matriz = x, Id_SubTipEsc__Nome_SubTipEsc = SubtipItem['Id_SubTipEsc__Nome_SubTipEsc'])
+                
+                if MatrizFor.count() > 0:
+                    for ItemOfMatriz in MatrizFor:
+                        ListEscala.append([ItemOfMatriz.NumMil_Matriz,ItemOfMatriz.IsHolyday_Matriz])    
+                else:     
+                    ListEscala.append([0, False]) 
+                    
+            
+            ListDate.append(ListEscala)
+            x = x + timedelta(days=1)
+    else:
+        x=0
+        
+
+    context = {  
+        'PageTitle':PageTitle,
+        'SubTipoEscalaList':SubTipoEscalaList,
+        'ListDate':ListDate,
+        'MonthOfMatriz':MonthOfMatrizForm,
+        
+    } 
+
+    return render(request, "PJI110/matriz.html", context)  

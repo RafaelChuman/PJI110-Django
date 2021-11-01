@@ -1,0 +1,72 @@
+{% extends "PJI110/MasterPage.html" %}
+
+{% block title %}
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+
+<form action="" method="post">
+    {% csrf_token %}
+    <aside>
+        <h2>Edit a Matriz de Serviço<br></br></h2>
+    </aside>
+    
+    <div class="TwoTables">
+        <div style="width: 40%;">
+            <aside>
+                <label>Data Início</label> 
+            </aside>
+            <aside>
+                {{form.DtBegin_Matriz}}
+            </aside>
+        </div>
+        <div style="width: 40%;">
+            <aside>
+                <label>Data Término</label>
+            </aside>
+            <aside>
+                {{form.DtEnd_Matriz}}
+            </aside>
+        </div>    
+    </div>
+    <aside>
+        <h2><br></br></h2>
+    </aside>
+    <div class="TwoTables">
+        <div style="width: 40%;">
+            <aside>
+                <label>Selecione a Escala</label>
+                {{ form.Id_SubTipEsc }}
+            </aside>
+        </div>
+        <div style="width: 40%;">
+            <aside>
+                <label>Nº Mil Sv</label>
+                {{form.NumMil_Matriz}}
+            </aside>
+        </div>    
+    </div>
+  
+    <aside>
+        <br></br>
+    </aside>
+    
+    <button class="SaveButton" type="submit" id="MatrizDel" name="MatrizDel" value="MatrizDel">
+        Excluir SV
+    </button>
+    <button class="SaveButton"  type="submit" id="MatrizAdd" name="MatrizAdd" value="MatrizAdd">
+        Inserir SV
+    </button>
+</form>
+
+    {% if form.non_field_errors %}
+    <div class="text-error">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+{% endblock %}

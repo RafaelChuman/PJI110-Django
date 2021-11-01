@@ -79,10 +79,12 @@ class Militar_Dispensa(models.Model):
     
 class Matriz(models.Model):
     Id_SubTipEsc = models.ForeignKey(SubTipoEscala, on_delete=models.CASCADE)    
-    Dt_Matriz = models.DateField
-    NumMil_Matriz = models.IntegerField
-    IsHolyday_Matriz = models.BooleanField
+    Dt_Matriz = models.DateField(null=False, blank=False)
+    NumMil_Matriz = models.IntegerField(null=False, blank=False)
+    IsHolyday_Matriz = models.BooleanField(null=False, blank=True, default=False)
     "Servicos = models.ManyToManyField(Militar)"
+    class Meta:
+        ordering = ('Dt_Matriz',)  
 
 class Servico(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)    

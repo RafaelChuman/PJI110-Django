@@ -1,14 +1,16 @@
-from datetime import time
+from datetime import date, time
 from django import forms
 from django.core.exceptions import DisallowedHost, ValidationError
+from django.db.models.fields import DateField
 from django.forms import fields
 from django.forms.forms import Form
 from django.forms.models import ModelForm
 import django.forms.utils
 import django.forms.widgets
 from django.utils.timezone import datetime, now
+from datetime import datetime
 
-from PJI110.models import SU
+from PJI110.models import SU, Matriz
 from PJI110.models import PostGrad
 from PJI110.models import Militar
 from PJI110.models import Dispensa
@@ -156,4 +158,58 @@ class SubTipoEscalaForm(forms.ModelForm):
 
     class Meta:
         model = SubTipoEscala
-        fields = ("Nome_SubTipEsc","Prioridade_SubTipEsc", "Id_TipEsc")     
+        fields = ("Nome_SubTipEsc","Prioridade_SubTipEsc", "Id_TipEsc")    
+
+MONTH_CHOICES =(
+    ("1","Janeiro"),
+    ("2", "Fevereiro"),
+    ("3", "Março"),
+    ("4", "Abril"),
+    ("5", "Maio"),
+    ("6", "Junho"),
+    ("7", "Julho"),
+    ("8", "Agosto"),
+    ("9", "Setebro"),
+    ("10", "Outubro"),
+    ("11", "Novebro"),
+    ("12", "Dezembro"),
+)
+
+class MonthOfMatrizForm(forms.Form):
+    DateOfMatriz = forms.ChoiceField(choices = MONTH_CHOICES, initial = datetime.now().month)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(MonthOfMatrizForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            self.initial['MonthOfMatrizForm'] = self.instance.MonthOfMatrizForm
+
+
+
+
+class MatrizForm(forms.Form):
+
+    Id_SubTipEsc =  forms.ModelChoiceField(queryset=SubTipoEscala.objects.all(), to_field_name="id")
+    DtBegin_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    DtEnd_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    NumMil_Matriz =  forms.IntegerField()
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(MatrizForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            self.initial['Id_SubTipEsc'] = self.instance.Id_SubTipEsc
+            self.initial['DtBegin_Matriz'] = self.instance.DtBegin_Matriz.isoformat()
+            self.initial['DtEnd_Matriz'] = self.instance.DtEnd_Matriz.isoformat()
+            self.initial['NumMil_Matriz'] = self.instance.NumMil_Matriz
+
+
+
+    # class Meta:
+    #     model = Matriz
+    #     fields = ("Id_SubTipEsc","Dt_Matriz", "NumMil_Matriz", "IsHolyday_Matriz")    
+
+    
