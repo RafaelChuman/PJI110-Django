@@ -206,6 +206,21 @@ class MatrizForm(forms.Form):
             self.initial['DtEnd_Matriz'] = self.instance.DtEnd_Matriz.isoformat()
             self.initial['NumMil_Matriz'] = self.instance.NumMil_Matriz
 
+class ServicoForm(forms.Form):
+
+    Id_TipEsc =  forms.ModelChoiceField(queryset = TipoEscala.objects.all(), to_field_name="id")
+    DtBegin_Servico = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    DtEnd_Servico = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(ServicoForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            self.initial['Id_TipEsc'] = self.instance.Id_TipEsc
+            self.initial['DtBegin_Servico'] = self.instance.DtBegin_Servico.isoformat()
+            self.initial['DtEnd_Servico'] = self.instance.DtEnd_Servico.isoformat()
 
 
     # class Meta:

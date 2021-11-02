@@ -84,7 +84,7 @@ class Matriz(models.Model):
     IsHolyday_Matriz = models.BooleanField(null=False, blank=True, default=False)
     "Servicos = models.ManyToManyField(Militar)"
     class Meta:
-        ordering = ('Dt_Matriz',)  
+        ordering = ('Dt_Matriz', 'Id_SubTipEsc__Id_TipEsc', 'Id_SubTipEsc__Prioridade_SubTipEsc')
 
 class Servico(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)    

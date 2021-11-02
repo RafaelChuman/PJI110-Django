@@ -1,5 +1,5 @@
 
-from datetime import timedelta
+from datetime import date, timedelta
 import re
 import sys
 from django.core.checks import messages
@@ -14,6 +14,7 @@ from django import forms
 from django.http import Http404
 
 from django.db.models.query import QuerySet
+from django.db.models import Prefetch
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -21,10 +22,12 @@ from django.urls import reverse
 from PJI110.forms import MatrizForm, Militar_TipoForm, MilitarForm, SubTipoEscalaForm, Militar_TipoEditForm
 from PJI110.forms import Militar_DispensaForm
 from PJI110.forms import MatrizForm, MonthOfMatrizForm
+from PJI110.forms import ServicoForm
 from PJI110.models import Militar, PostGrad, SU, TipoEscala
 from PJI110.models import Dispensa, Militar_Dispensa
 from PJI110.models import Militar_Tipo, SubTipoEscala
 from PJI110.models import Matriz 
+from PJI110.models import Servico 
 
 
 def militarDel(request, Id_Mil):
@@ -123,8 +126,7 @@ def MilitarSearch(request, *args, **kwargs):
       
     return render(request, "PJI110/militares.html", context)
 
-def Home(request):
-    return render(request, "PJI110/home.html")
+ 
 
 def EscalaDelMil(request, MilId, TipEscID):
     Militar_Tipo_Object =  Militar_Tipo.objects.get(Id_Mil = MilId, Id_TipEsc = TipEscID)
@@ -512,4 +514,149 @@ def matriz(request):
         
     } 
 
-    return render(request, "PJI110/matriz.html", context)  
+    return render(request, "PJI110/matriz.html", context, )  
+
+
+def AppendMilitarIntoServico(ListMilitarDispensado, ListMilitaresServico, ListServico, ListTemp, ItemMatrizEscala):
+    
+    #Indice Começa em 0, porque é o Primeiro Militar da Lista é o próximo a ser escalado
+    xV = 0
+    #Condição para não Adicionar o Militar que Esta Dispensado nesse Dia
+    while(ListMilitarDispensado.filter(Id_Mil = ListMilitaresServico[xV].id).count() >0):
+        #Se o militar não pode ser Escalado, então pegamos o Próximo da Lista Disponível
+        xV = xV + 1
+
+    #Condição para Verificar se o Militar Ja Está de Serviço em Outro Tipo de Servço
+    #A Condição Deverá Vericar 2 Dias Antes e 2 Dias Depois. Pois 48h é o Intervalo Mínimo entre 1 Serviço e Outro
+    DtBegin = ItemMatrizEscala.Dt_Matriz - timedelta(days=2)
+    DtEnd = ItemMatrizEscala.Dt_Matriz
+    while(Servico.objects.filter(Id_Matriz__Dt_Matriz__range=[DtBegin,DtEnd], Id_Mil = ListMilitaresServico[xV].Id_Mil).count() > 0):
+        xV = xV + 1 
+
+    #Condição para Verificar se o Militar Já Está de Serviço Na Escala Preta
+    #A Condição Deverá Verificar 2 dias Antes. Pois o Intervalo Mínimo de 1 Serviço para Outro é também de 48h
+    NumListSV = len(ListServico)
+    y = NumListSV - 2
+    reset = False
+    if(y >= 0):
+        while(y < NumListSV):
+            for Item in ListServico[y][2]:#ListServico[y][2] = 3º Posição, Pois o Método Append na linha 623 Adiciona ListTemp na 3ª Posição
+                while(Item[0] == ListMilitaresServico[xV]):#Item[0] = 1ª Posição, está seguindo a Ordem do Método Append 
+                    xV = xV + 1 
+                    reset = True
+
+            #Essa Condição é Nescessária, porque é um ERRo Lógico não verificar (Os 2 Dias Antes) para o Novo Militar Selecionado
+            #Sem Essa Condição, após sair do While o Código adiciona y + 1, então só estariamos verificando 1 Dia Antes
+            if (reset): 
+                y = NumListSV - 2
+                reset = False
+            else:
+                y = y + 1        
+
+    #Adiciona o Militar Na Lista de Escalados.
+    ListTemp.append([ListMilitaresServico[xV].id, ItemMatrizEscala.id]) 
+
+    #Retiramos o Militar Escalado e Colocamos no final da Fila, pois ele passa a ser o Mais folgado na Escala de Serviço  
+    ListMilitaresServico.append(ListMilitaresServico[xV]) 
+    ListMilitaresServico.pop(xV)
+
+def Home(request):
+
+    PageTitle = 'Escala de SV 1º B Av Ex'
+    MatrizEscala = ""
+    SubTipoEscalaList = ""
+    #Essa Lista Será Exibida na Página e Após ser Homologada Será Salva na Base de Dados
+    ListServico = list()
+    
+    #Para Calcular a escala de Serviço precisamos:    
+    '''
+    1º Selecionar a Data que desejamos montar a escala de Serviço
+    '''
+    '''
+    2º O Sistema Vai Mostrar uma Tabela com os Dados dos Militares que estarão de Serviço
+    '''
+    '''
+    3º O Adminsitrador vai homologar os dados salvando na Tabela de SV
+    '''
+    '''
+    4º Quando Excluir um Militar da Escala de Serviço (Tabela de Dispensa) - Verificar se Esse Militar Esta na Escala de SV Salva
+    '''
+    '''
+    5º Caso Positivo o Sistema deverá Excluir todos os Serviços Posteriores (Excluit por SV e não somente o TipoEscalaSV)
+    '''
+    '''
+    6º Novamente o Adm deverá Iniciar do Passo 1º
+    '''
+    if request.method == 'POST':
+        form = ServicoForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            DateBegin = form.cleaned_data['DtBegin_Servico']
+            DateEnd = form.cleaned_data['DtEnd_Servico']
+            Id_TipEscForm = form.cleaned_data['Id_TipEsc']
+
+            #Atualiza a Caixa de Pesquisa de Acorodo com o Filtro do Usuário
+            SubTipoEscalaList  = SubTipoEscala.objects.filter(Id_TipEsc = Id_TipEscForm)
+            
+            #Pesquisar a Matriz de Acordo com o Filtro do Usuário
+            MatrizEscala =  Matriz.objects.filter(Dt_Matriz__range=[DateBegin, DateEnd], Id_SubTipEsc__Id_TipEsc = Id_TipEscForm)
+            
+            ListMatrizEscala = list()
+            #Listar Todos os Itens da Matriz que não foram inseridos na Tabela de Serviço
+            ServicoEscala = Servico.objects.filter(Id_Matriz__Dt_Matriz__range=[DateBegin, DateEnd])
+            for ItemMatrizEscala in MatrizEscala:
+                if(ServicoEscala.filter(Id_Matriz = ItemMatrizEscala.id).count() == 0): ListMatrizEscala.append(ItemMatrizEscala)
+            
+            #Selecionar Todos os Militares que Concorrem a Escala de Serviço. Faço uma Conversão Para List, porque  Militar No Topo da Fila será o Proximo para o Serviço
+            #Caso o Militar Esteja Dispensado ele Continuará no Topo da Lista até a Dispensa acabar e ele ser escalado
+            #Quando o Sistema For Reiniciado a Ordenação da Data de Serviço Fará que o Militar Seja o 1º da Lista Novamente.
+            ListMilitaresServicoPreta  = list(Militar_Tipo.objects.filter(Id_TipEsc = Id_TipEscForm).order_by('DtSv_P_Mil_TipEsc', "NumSv_P_Mil_TipEsc"))
+            ListMilitaresServicoVermelha  = list(Militar_Tipo.objects.filter(Id_TipEsc = Id_TipEscForm).order_by('DtSv_V_Mil_TipEsc', "NumSv_V_Mil_TipEsc"))
+
+            #Atribuir Cada Militar Para Seu respectivo Dia da Escala
+            for ItemMatrizEscala in ListMatrizEscala:
+                
+                ListTemp = list()
+
+                #Lista de Todos os Militares Dispensados Nessa Data
+                ListMilitarDispensado = Militar_Dispensa.objects.filter(Begin_Mil_Disp__gte = ItemMatrizEscala.Dt_Matriz, End_Mil_Disp__lte = ItemMatrizEscala.Dt_Matriz)
+
+                #Para Cada Item Da Matriz Deve Escalar Um Militar
+                x = 0
+                NumMil = ItemMatrizEscala.NumMil_Matriz
+                while x <  NumMil:
+                    if ItemMatrizEscala.IsHolyday_Matriz:
+                        
+                        AppendMilitarIntoServico(ListMilitarDispensado, ListMilitaresServicoVermelha, ListServico, ListTemp, ItemMatrizEscala)
+                  
+                    else:
+
+                        AppendMilitarIntoServico(ListMilitarDispensado, ListMilitaresServicoPreta, ListServico, ListTemp, ItemMatrizEscala)                       
+                    
+                    x = x + 1
+                #Adiciona Todos Os Serviços do SubTipo da Escala Concatenados em Vetores. (Esse Concatenação é importante, pois será usado na iteração For-For)
+                ListServico.append([ItemMatrizEscala.Dt_Matriz, ItemMatrizEscala.Id_SubTipEsc, ListTemp])        
+    else:
+        form = ServicoForm()
+
+        #Recupera o Primerio Tipo Escala para inserir no FORM.
+        filtroTipoEscala = TipoEscala.objects.all()[:1][0]
+        ServicoList = Servico.objects.filter(Id_Matriz__Id_SubTipEsc__Id_TipEsc = filtroTipoEscala).order_by('-Id_Matriz__Dt_Matriz')[:5]
+
+        #Caso não Exista Serviços na Data da data padrão será HOJE. Senão a Data Padrão será a data do Ultimo Serviço
+        if ServicoList.count() > 0:           
+            form['DtBegin_Servico'].value = datetime.now
+        else:
+            form['DtBegin_Servico'].value = ServicoList[0].Id_Matriz.DtMatriz   
+
+        
+
+    context = {  
+        'PageTitle':PageTitle,
+        'MatrizEscala':MatrizEscala,
+        'SubTipoEscalaList': SubTipoEscalaList,
+        'ListServico':ListServico,
+        'form':form,        
+    } 
+
+    return render(request, "PJI110/home.html", context) 

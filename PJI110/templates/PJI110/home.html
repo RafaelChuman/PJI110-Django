@@ -1,13 +1,98 @@
 {% extends "PJI110/MasterPage.html" %}
 
 {% block title %}
-Home
-{% endblock %}
-
-{% block MenubarHome %}
-class="a-selected"
+    {% if PageTitle is not None %}
+        {{PageTitle}}
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-<p>Home page for the Visual Studio Code Django tutorial.</p>
+    
+
+<aside>
+    <h2>{{PageTitle}}</h2>
+</aside>
+
+<form action="" method="post"> 
+    {% csrf_token %} 
+    <div class="TwoTables">
+        <div style="width: 40%;">
+            <aside>
+                <label>Data Início</label> 
+            </aside>
+            <aside>
+                {{form.DtBegin_Servico}}
+            </aside>
+        </div>
+        <div style="width: 40%;">
+            <aside>
+                <label>Data Término</label>
+            </aside>
+            <aside>
+                {{form.DtEnd_Servico}}
+            </aside>
+        </div>    
+
+    </div>    
+    <br></br>
+    <!-- <aside> -->
+        <label>Selecione a Escala de serviço</label>
+    <!-- </aside>
+    <aside> -->
+        {{form.Id_TipEsc}}
+    <!-- </aside> -->
+        <br></br>
+    <button class="SaveButton"  type="submit" id="ServicoAdd" name="ServicoAdd" value="ServicoAdd">
+        Inserir Matriz
+    </button>
+</form>
+
+<aside>
+  <br></br>
+</aside>
+
+{% if MatrizEscala %}
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                {% if SubTipoEscalaList %}
+                    {% for SubTipoEscala in SubTipoEscalaList %}
+                        <th> {{ SubTipoEscala.Nome_SubTipEsc }}</th>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            
+        {% for MatrizEscalaList in ListServico %}
+        <tr>
+            <td>{{MatrizEscalaList.0 }}</td>
+            <td>{{MatrizEscalaList.1 }}</td>
+            <td>{{MatrizEscalaList.2 }}</td>
+        </tr>      
+        {% endfor %}
+            
+        </tbody>
+    </table>
+{% endif %}    
+       
+<aside>
+    <h2><br></br></h2>
+</aside>
+
+<form action="" method="get"> 
+    {% csrf_token %}
+    <button class="SaveButton" type="submit" id="ServicoDel" name="ServicoDel" value="ServicoDel">
+        Excluir Matriz
+    </button>
+</form>
+
+
+{% if form.non_field_errors %}
+<div class="text-error">
+    {{ form.non_field_errors }}
+</div>
+{% endif %}
+   
 {% endblock %}
