@@ -37,10 +37,16 @@
 
     </div>    
     <br></br>
- 
-    <label>Selecione a Escala de serviço</label>
-
-    {{form.Id_TipEsc}}
+    <!-- <aside> -->
+        <label>Selecione a Escala de serviço</label>
+    <!-- </aside>
+    <aside> -->
+        {{form.Id_TipEsc}}
+    <!-- </aside> -->
+        <br></br>
+    <button class="SaveButton"  type="submit" id="ServicoBiuld" name="ServicoBiuld" value="ServicoBiuld">
+        Gerar Matriz Serviço
+    </button>
 
 
 <aside>
@@ -64,25 +70,27 @@
             Índice 0 = Dt_Matriz
             Índice 1 = Lista de Serviços no Dia/Militares
                 -> Indice 0 = SubTipEsc_id 
-                -> Indice 1 = Matriz
-                -> Indice 2 = Lista Militares de Serviço Do SubTipoEscala
-                    -> Índice 0 Lista Militares = Nome Guerra Mil                                   
+                -> Indice 1 = IsHoliday_Matriz
+                -> Indice 2 = Id_Matriz 
+                -> Indice 3 = Lista Militares de Serviço Do SubTipoEscala
+                    -> Índice 0 Lista Militares = Nome PG Mil 
+                    -> Índice 1 Lista Militares = Nome Guerra Mil
+                    -> Índice 2 Lista Militares = SU Mil                                        
         -->
                   
         {% for ItemSvData in ListServicoTemplate %}  
         <tr>
             <td>{{ ItemSvData.0|date:"d/m - D " }}</td>
             
-            {% for Item in ItemSvData.1 %}
-              
-                {% if Item.1.IsHolyday_Matriz %}
+            {% for ItemTemplate in ItemSvData.1 %}  
+                {% if ItemTemplate.1 %}
                     <td style="color: red; font-weight: 600;">
                 {% else %}
                     <td>
                 {% endif %}
-                {% for ItemTemplate in Item.2 %}
-                    {{ItemTemplate}}<br>  
-                {% endfor %}
+                {% for Mil in ItemTemplate.3 %} 
+                    {{Mil.1}} {{Mil.2}}<br>  
+                {% endfor %}  
                 </td>   
             {% endfor %}
         </tr>    

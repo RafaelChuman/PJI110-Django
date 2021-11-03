@@ -89,3 +89,6 @@ class Matriz(models.Model):
 class Servico(models.Model):
     Id_Mil = models.ForeignKey(Militar, on_delete=models.CASCADE)    
     Id_Matriz = models.ForeignKey(Matriz, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('Id_Matriz__Dt_Matriz', 'Id_Matriz__Id_SubTipEsc__Id_TipEsc', 'Id_Matriz__Id_SubTipEsc')
