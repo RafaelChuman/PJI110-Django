@@ -22,6 +22,7 @@ urlpatterns = [
     path("escala/", views.escala, name="escala"),
     path("militares/", views.MilitarSearch, name="militares"),
     path("matriz/", views.matriz, name="matriz"),
+    path("matrizAdd/", views.matrizAdd, name="matrizAdd"),
     path("dispensa/", views.dispensaSearch, name="dispensa"),
     path("dispensaAdd/<id>", views.DispensaAdd, name="dispensaAdd"),
     path("militarAdd/<id>", views.militarAdd, name="militarAdd"),

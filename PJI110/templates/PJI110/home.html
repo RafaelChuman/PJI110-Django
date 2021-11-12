@@ -37,14 +37,42 @@
 
     </div>    
     <br></br>
- 
+    <aside>
+    <!-- <table>
+        <thead></thead>
+        <tbody>
+            <tr>
+                <td>
+                <label>Selecione a Escala de serviço</label>
+                </td>
+                <td>
+                {{form.Id_TipEsc}}
+                </td>
+                <td>
+                <button class="TableButton" type="submit" id="ServicoSearch" name="ServicoSearch" value="ServicoSearch">
+                <svg aria-label="Editar" role="img" viewBox="0 0 40 40" height="32" width="32">
+                    <circle cx="15" cy="15" r="10" stroke="#0095f6" stroke-width="2" fill="#0095f6" ></circle>
+                    <circle cx="15" cy="15" r="7" stroke="white" stroke-width="2" fill="white" ></circle>
+                    <rect x="22" y="20" ry="3" width="15"  stroke="#0095f6" stroke-width="2" fill="#0095f6"  transform-origin="center" transform="rotate(45)" height="2"></rect>
+                </svg>
+                </button>
+                </td>
+            </tr>
+        </tbody>
+    </table> -->
     <label>Selecione a Escala de serviço</label>
 
     {{form.Id_TipEsc}}
 
+    <button class="Searchbutton" type="submit" id="ServicoSearch" name="ServicoSearch" value="ServicoSearch">
+    <svg aria-label="Editar" role="img" viewBox="0 0 40 40" height="27" width="27">
+        <circle cx="15" cy="15" r="10" stroke="#0095f6" stroke-width="2" fill="#0095f6" ></circle>
+        <circle cx="15" cy="15" r="7" stroke="white" stroke-width="2" fill="white" ></circle>
+        <rect x="22" y="20" ry="3" width="15"  stroke="#0095f6" stroke-width="2" fill="#0095f6"  transform-origin="center" transform="rotate(45)" height="1"></rect>
+    </svg>
+    </button>
 
-<aside>
-  <br></br>
+    <br></br>
 </aside>
 
 {% if ListServicoTemplate %}
@@ -92,15 +120,15 @@
         </tbody>
     </table>
 {% endif %}    
-       
+</form>
 <aside>
    <br></br>
 </aside>
-
+<form action="" method="post"> 
     {% csrf_token %}
     
     <button class="SaveButton" type="submit" id="ServicoAdd" name="ServicoAdd" value="ServicoAdd">
-        Homologar Serviço
+        Gerar Escala de Serviço
     </button>
 </form>
 

@@ -27,6 +27,7 @@ class="a-selected"
                 {% for escala in SubTipoEscalaList %}
                     <tr>
                         <form action="" method="get" >
+                            {% csrf_token %}
                             <td>
                                 <button  class="inputAsRow" type="submit" id="EscalaSelect" name="EscalaSelect" value= {{escala.Id_TipEsc_id}}> 
                                     {{ escala.Nome_SubTipEsc}}

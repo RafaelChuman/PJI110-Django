@@ -1,0 +1,109 @@
+body {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-top: 0px;
+}
+
+.imgLogo{
+    height:96px;
+    width: 96px;
+}
+
+main
+{
+    background-color: #fafafa;
+    justify-content: center;
+    border-top: 1px solid #efefef;
+}
+
+a{
+    color: #8e8e8e;
+    text-decoration: none;
+    display:flex;
+    flex-direction: row;
+    height: 52px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-right: 60px;
+}
+
+.a-selected{
+    color: #262626;
+    border-top: 1px solid #262626; 
+    margin-top: -2px;
+}
+
+.navClass
+{
+    justify-content: center;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    /*-webkit-justify-content: space-between;*/
+}
+
+.MenuBar{
+    align-items: center;
+    display:flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.divSeparador{
+    display: block;
+    position: relative;
+    width: 100%;
+}
+
+.divConteudo{
+    color: #262626;
+    background-color: white;
+    font-size: 14px;
+    line-height: 18px;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    border-radius: 3px;
+    border: 1px solid #dbdbdb;
+    min-width: 640px;
+    min-height: 750px;
+}
+
+.Bodysize{
+    box-sizing: content-box;
+    padding: 00px 20px 20px;
+    width: calc(60% - 40px);
+    min-width: 736px;
+    display: table;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+
+tr:hover{
+    background-color:#fafafa;
+}
+
+tr:nth-child(even){
+    background-color: #f2f2f2
+}
+
+th {
+    background-color: #61b9c8;
+    color: white;
+}
+
+table, th, td {
+    border: 1px solid #262626;
+    border-bottom: 1px solid #262626;
+    border-collapse: collapse;
+    text-align: center;
+    vertical-align: center;
+    padding: 5px 10px 5px 10px;
+    margin-right: auto;
+    margin-left: auto;    
+ }

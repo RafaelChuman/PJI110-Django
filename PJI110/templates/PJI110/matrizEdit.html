@@ -36,26 +36,18 @@
     <aside>
         <br></br>
     </aside>
-    <div class="TwoTables">
-        <div style="width: 40%;">
-            <aside>
-                <label>Selecione a Escala</label>
-                {{ form.Id_SubTipEsc }}
-            </aside>
-        </div>
-        <div style="width: 40%;">
-            <aside>
-                <label>Nº Mil Sv</label>
-                {{form.NumMil_Matriz}}
-            </aside>
-        </div>    
-    </div>
-  
+
+    <div>
+        <aside>
+            <label>Escala Vermelha?</label>
+            {{form.IsHolyday_Matriz}}
+        </aside>
+    </div>    
+
     <aside>
         <br></br>
     </aside>
-    
-    <button class="SaveButton"  type="submit" id="MatrizAdd" name="MatrizAdd" value="MatrizAdd">
+    <button class="SaveButton" type="submit" id="MatrizEdit" name="MatrizDel" value="MatrizEdit">
         Salvar
     </button>
 </form>

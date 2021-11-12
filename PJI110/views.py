@@ -21,9 +21,9 @@ from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from PJI110.forms import MatrizForm, Militar_TipoForm, MilitarForm, SubTipoEscalaForm, Militar_TipoEditForm
+from PJI110.forms import Militar_TipoForm, MilitarForm, SubTipoEscalaForm, Militar_TipoEditForm
 from PJI110.forms import Militar_DispensaForm
-from PJI110.forms import MatrizForm, MonthOfMatrizForm
+from PJI110.forms import MatrizSelectForm, MatrizAddForm, MatrizDelForm, MatrizEditForm
 from PJI110.forms import ServicoForm
 from PJI110.models import Militar, PostGrad, SU, TipoEscala
 from PJI110.models import Dispensa, Militar_Dispensa
@@ -31,65 +31,92 @@ from PJI110.models import Militar_Tipo, SubTipoEscala
 from PJI110.models import Matriz 
 from PJI110.models import Servico 
 
-def CreateMilitarDatabase():
-    x= 0
-    while (x < 11):
-        for ItemSU in SU.objects.all():
-            for ItemPG in PostGrad.objects.all():
-               Militar.objects.create(
-                DtNsc_Mil = timezone.now(),
-                DtPrac_Mil = timezone.now(),
-                DtProm_Mil = timezone.now(),
-                Nome_Mil = str(ItemPG.Nome_PG) + " " + str(x)  + str(ItemSU.Nome_SU),
-                NomeG_Mil =  str(ItemPG.Nome_PG) + " " + str(x)  + str(ItemSU.Nome_SU),
-                Id_PG = ItemPG,
-                Id_SU = ItemSU,
-                Vsb_Mil = True)
-        x = x + 1
+#Deletas Todos os Serviços apartir de uma Data Incial, Quando Alteramos um TipEscala
+def servicoDel(DateBegin, IdMilitar):
 
+    SubTipEscalaList = Militar_Tipo.objects.filter(Id_Mil = IdMilitar)
+
+    if SubTipEscalaList.count != 0:
+        for SubTipEscalaItem in SubTipEscalaList:
+            ServicoSearchObject = Servico.objects.filter(Id_Matriz__Dt_Matriz__gte = DateBegin, Id_Matriz__Id_SubTipEsc__Id_TipEsc = SubTipEscalaItem.id)
+
+            if ServicoSearchObject.count() != 0:
+                for ServicoSearchItem in ServicoSearchObject:
+                    ServicoSearchItem.delete()
+
+#Deletas Todos os Serviços apartir de uma Data Incial
+def servicoDel(DateBegin):
+
+    ServicoSearchObject = Servico.objects.filter(Id_Matriz__Dt_Matriz__gte=DateBegin)
+
+    if ServicoSearchObject.count() != 0:
+        for ServicoSearchItem in ServicoSearchObject:
+            ServicoSearchItem.delete()
+                
         
-
-
-
-
-def militarDel(request, Id_Mil):
     
-    if Id_Mil != 0:
-        militar = get_object_or_404(Militar, pk=Id_Mil)
+
+
+#Função para Deletar um Militar a Partir de um ID
+#O Militar não é Excluido, Mas alteramos sua Flag Visible para FALSE
+def militarDel(request, IdMil):
+    
+    '''
+    Ao Excluir um Militar devemos Retirar ele da Escala de Serviço. (Tabela Militar_Tipo)
+    '''
+    '''
+    Ao Excluir o Militar Também Devemos Excluir Todos os Serviços que o Militar está escalado Apartir da Data Atual do Sistema
+    '''
+
+    if IdMil != 0:
+        militar = get_object_or_404(Militar, pk=IdMil)
         
         if militar is not None:  
+
+            #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
+            #A Folga de toda a escala
+            servicoDel(DateBegin=datetime.now(), IdMilitar=IdMil)
+
+            MilitarTipoList = Militar_Tipo.objects.filter(Id_Mil = IdMil)
+            if MilitarTipoList.count() != 0:
+
+                for MilitarTipoItem in MilitarTipoList:
+                    MilitarTipoItem.delete() #Exclui o Militar da Escala de Serviço
+            
             militar.Vsb_Mil = False
             militar.save()
+
+
+
     context = {
         "object": militar
     }
             
     return HttpResponseRedirect(reverse('militares'))
 
+#Função para Adicionar/Atualizar o Militar. Se o Id Existir então atualizamos os Dados, Senão Inserimos um Militar Novo
 def militarAdd(request, Id_Mil):
     
     PageTitle = ""
     
     if Id_Mil != 0:
         militar = get_object_or_404(Militar, pk=Id_Mil) 
-        form = MilitarForm(request.POST or None, instance=militar)         
+        form = MilitarForm(request.POST or None, instance=militar) #Método Carrega o FORM com os dados do Militar        
 
         PageTitle = "Editar " + militar.NomeG_Mil
     else:
         PageTitle = "Adicionar Novo Militar"
         
         militar = Militar()
-        form = MilitarForm(request.POST or None)
-
+        form = MilitarForm(request.POST or None)    #Cria um FORM Novo
     
-
     if request.method == 'POST':
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
             profile.save()
 
-            return HttpResponseRedirect(reverse('militares'))
+            return HttpResponseRedirect(reverse('militares'))   #Após Salvar os Dados do Militar retornamos para a Página Inicial de Militares
         else:
             print(form.errors)
 
@@ -100,29 +127,32 @@ def militarAdd(request, Id_Mil):
     
     return render(request, "PJI110/militarAdd.html", context)
 
+#Função para Restaurar/Reativar um Militar Excluido
 def militarHidden(request, *args, **kwargs):
 
     if len(request.GET) > 0:
          for action in request.GET:
             if action == "MilitarReact":
                 if request.GET['MilitarReact'] != 0:
-                    militar = get_object_or_404(Militar, pk=request.GET['MilitarReact'])
+
+                    militar = get_object_or_404(Militar, pk=request.GET['MilitarReact']) #Pesquisa e Recupera o Objeto Militar
                     
                     if militar is not None:
-                        militar.Vsb_Mil = True
+                        militar.Vsb_Mil = True  #Atualiza a Flag Visible para TRUE. A Flag Visible determina se o Militar Está Habilitado ou não
                         militar.save()
 
                         return HttpResponseRedirect(reverse('militares'))
 
+    #Retorna Todos Os Miltiares Desabilitados
     militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = False)
 
-
     context = {
-        "object": militarList
+        "militarList": militarList
     }    
         
-    return render(request, "PJI110/militarHidden.html", {'militarList':militarList})
+    return render(request, "PJI110/militarHidden.html", context)
    
+#Página Principal de Militares   
 def MilitarSearch(request, *args, **kwargs):
     
     if len(request.GET) > 0:
@@ -131,14 +161,15 @@ def MilitarSearch(request, *args, **kwargs):
                 return militarAdd(request, 0)
             else:
                 if action == "MilitarEdit":
-                    return militarAdd(request, request.GET['MilitarEdit'])
+                    return militarAdd(request, request.GET['MilitarEdit']) #O Id != 0 Determina a Função de Atualizar os dados do Militar
                 else:                          
                     if action == "MilitarDel":
                         return militarDel(request, request.GET['MilitarDel'])
                     else:  
                         if action == "MilitarHidden":
-                            return redirect("../militarHidden")
+                            return HttpResponseRedirect(reverse('militarHidden'))
 
+    #Recupera todos os Militares que Estão Habilitados no Sistema
     militarList = Militar.objects.select_related("Id_SU", "Id_PG").filter(Vsb_Mil = True)
     
             
@@ -149,19 +180,36 @@ def MilitarSearch(request, *args, **kwargs):
     return render(request, "PJI110/militares.html", context)
 
  
-
+#Função Para Desassociar um Militar de Um Tipo de Escala de Serviço
 def EscalaDelMil(request, MilId, TipEscID):
-    Militar_Tipo_Object =  Militar_Tipo.objects.get(Id_Mil = MilId, Id_TipEsc = TipEscID)
-    Militar_Tipo_Object.delete()
+   
+    '''
+    Ao Excluir Uma Associação de um Militar com Uma Escala de Serviço Devemos excluir todos os Serviços desse Militar Apartir da Data Atual do Sistema
+    '''
 
+    if MilId != 0 & TipEscID != 0:
+        Militar_Tipo_Object =  Militar_Tipo.objects.get(Id_Mil = MilId, Id_TipEsc = TipEscID)
+        
+        if Militar_Tipo_Object is not None:  
+
+            #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
+            #A Folga de toda a escala
+            servicoDel(DateBegin=datetime.now(), IdMilitar=MilId)
+
+            Militar_Tipo_Object.delete()
+           
+#Essa Função somente Altera os Dados De serviço da Tabela Militar_Tipo, como: Data do ultimo Serviço e Quantidade de Serviço Tirado
 def escalaEdit(request, id_Militar, id_TipoEscala):
+    
+    '''
+    Ao Editar Uma Associação de um Militar com Uma Escala de Serviço Devemos excluir todos os Serviços desse Militar Apartir da Data Atual do Sistema
+    '''
     
     PageTitle = ""
     
+    #Recupera o Objeto Militar_Tipo
     MilitarTipo_Object = get_object_or_404(Militar_Tipo, Id_Mil = id_Militar, Id_TipEsc = id_TipoEscala) 
     form = Militar_TipoEditForm(request.POST or None, instance=MilitarTipo_Object) 
-
-
 
     PageTitle = "Editar " + MilitarTipo_Object.Id_Mil.NomeG_Mil
 
@@ -170,7 +218,11 @@ def escalaEdit(request, id_Militar, id_TipoEscala):
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
-            profile.save()
+            profile.save()  #Salva o Objeto Militar_Tipo. Os Dados São alterados no Form pelo Usuário
+
+            #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
+            #A Folga de toda a escala
+            servicoDel(DateBegin=datetime.now(), IdMilitar=form.cleaned_data['Id_Mil'])
 
             return HttpResponseRedirect(reverse('escala'))
         else:
@@ -182,69 +234,58 @@ def escalaEdit(request, id_Militar, id_TipoEscala):
         'PageTitle': PageTitle
     }
     
-    # return HttpResponseRedirect(reverse('escalaEdit', args=(id_Militar,id_TipoEscala,)))
     return render(request, "PJI110/escalaEdit.html", context)  
 
+#Adiciona uma Lista de Militares para uma Escala de Serviço no Model Militar_Tipo
+#Esse Model é responsável por defir em qual escala de serviço o militar irá participar
 def EscalaAdd(request, SubTipEscID):
     
+    '''
+    Ao Adicionar militares em uma Escala de Serviço, Devemos Limpar o Serviço calculado para o TipoEsc serviço que o Militar foi Adicionao
+    '''
+
     PageTitle = "Editar Escala" 
     
     if request.method == 'POST':
 
         form = Militar_TipoForm(request.POST, request.FILES)
 
-        # if form.is_valid():
-
         Id_SubTipoEscalaInstance = SubTipoEscala.objects.get(id = form.data['Id_TipEsc'])
 
+        #Iteração para Inserir Militar por Militar na Tabela Militar_Tipo
         for militar in request.POST.getlist('Id_Mil'):
             if Militar_Tipo.objects.filter(Id_Mil=militar,Id_TipEsc =  Id_SubTipoEscalaInstance.Id_TipEsc).count() == 0:
+                #Salva o Militar e o Tipo de Escala no Model Militar_Tipo
                 Militar_Tipo.objects.create(
                     Id_Mil = Militar.objects.get(id=militar),
                     Id_TipEsc = Id_SubTipoEscalaInstance.Id_TipEsc,
-                    # DtSv_P_Mil_TipEsc = form.data['DtSv_P_Mil_TipEsc'],
-                    # NumSv_P_Mil_TipEsc = form.data['NumSv_P_Mil_TipEsc'],
-                    # DtSv_V_Mil_TipEsc =form.data['DtSv_V_Mil_TipEsc'],
-                    # NumSv_V_Mil_TipEsc = form.data['NumSv_V_Mil_TipEsc']
                 )
 
-        # profile = form.save(commit=False)
-        # profile.user = request.user
-        # profile.post = request.POST
-        # profile.save()
-
-        # form.save_m2m()
-
+                servicoDel(DateBegin=datetime.now(),id_Mil = militar)   #Limpa Todos os Serviços do TipEsc que o Militar Está inserido
+                        
         return HttpResponseRedirect(reverse('escala'))
-        # else:
-        #     print(form.errors)
     else:
-      
         form = Militar_TipoForm()
 
     context = {
         'form': form,
         'PageTitle': PageTitle
     }
-    
     return render(request, "PJI110/escalaAdd.html", context)
 
+#Tela Principal da Escala de Serviço. Exibe os Militares de acordo com a escala de serviço selecionada
 def escala(request, *args, **kwargs):
     
     MilitaresList = 0
 
-
+    #Ainformação de qual Escala de serviço foi selecionada esta gravada em uma Session
     if request.session.get('SubTipoEscalaId') != 0: TipoEscalaId =  request.session.get('SubTipoEscalaId')
-
-    
 
     if len(request.GET) > 0:
         for action in request.GET:
             if action == "EscalaSelect":
                 MilitaresList = TipoEscala.objects.get(id =  request.GET['EscalaSelect'])
                 MilitaresList = MilitaresList.Militares_TipoEscala.all()
-                # MilitaresList = MilitaresList.filter(Id_Mil__Vsb_Mil = True)
-                # filter(Id_TipEsc =  request.GET['EscalaSelect'])
 
                 request.session['SubTipoEscalaId'] = request.GET['EscalaSelect']
             else:
@@ -260,10 +301,6 @@ def escala(request, *args, **kwargs):
                             if action == "MilitarDel":
                                 EscalaDelMil(request, request.GET['MilitarDel'], TipoEscalaId)
         
-                 
-    
-    
-    # DispensaList = Militar_Dispensa.objects.select_related("Id_Mil", "Id_Disp").select_related("Id_Mil__Id_PG")
     SubTipoEscalaList = SubTipoEscala.objects.all()
 
     context = {             
@@ -274,22 +311,22 @@ def escala(request, *args, **kwargs):
 
     return render(request, "PJI110/escala.html", context)  
 
+#Adiciona um SubTipoEscala Herdado de um TipoEscala
 def tipoEscalaAdd(request, id_SubtipoEscala):
     
     PageTitle = ""
     
+    #Só realiza a pesquisa se o Id for válido
     if id_SubtipoEscala != 0:
         SubTipoEscala_Object = get_object_or_404(SubTipoEscala, pk=id_SubtipoEscala) 
         form = SubTipoEscalaForm(request.POST or None, instance=SubTipoEscala_Object)         
 
         PageTitle = "Editar " + SubTipoEscala_Object.Nome_SubTipEsc
-    else:
+    else: #Caso o Id seja inválido inicializa um Form Nulo, Logo iniciamos o processo de criar um novo SubTipoEscala
         PageTitle = "Adicionar Novo SubTipSV"
         
         SubTipoEscala_Object = SubTipoEscala()
         form = SubTipoEscalaForm(request.POST or None)
-
-    
 
     if request.method == 'POST':
         if form.is_valid():
@@ -347,6 +384,7 @@ def tipoEscala(request, *args, **kwargs):
     #Método Render força a criação da Página com os dados criados nesta Função
     return render(request, "PJI110/tipoEscala.html", context)  
 
+#Página principal para listar todas as dispensas cadastradas para os militares
 def dispensaSearch(request, *args, **kwargs):
     
     if len(request.GET) > 0:
@@ -360,31 +398,51 @@ def dispensaSearch(request, *args, **kwargs):
                     if action == "DispensaDel":
                         return DispensaDel(request, request.GET['DispensaDel'])
     
-    # DispensaList = Militar_Dispensa.objects.select_related("Id_Mil", "Id_Disp").select_related("Id_Mil__Id_PG")
+    #Recupera todas as Dispensas que a Data da Dispensa tenha validade até a hora atual do sistema.
+    #Caso a dispensa esteja com a Data Menor ela não deverá ser exibida, simplesmente porque a dispensa já acabou.
+    #Não é nescessário excluir a dispensa, Inclusive é importante manter esse histório para futuros relatórios.
+    #A dispensa somente será excluída se for por motivo de inserção erronea e o método de Update não for suficiente para corrigir
     DispensaList = Militar_Dispensa.objects.filter(Id_Mil__Vsb_Mil = True, End_Mil_Disp__gte = datetime.now())
 
-    
     context = {             
         'DispensaList':DispensaList
     } 
 
     return render(request, "PJI110/dispensa.html", context)     
     
-def DispensaDel(request, Id_Disp):
+#Método de Excluisão da Dispensa. É uma página simples.    
+def DispensaDel(request, Id_Disp, Id_Mil):
     
+    '''
+    Ao Exluir Uma Dispensa de Um Militar Devemos Excluir Todo o Serviço que o Militar Participa
+    pois o Militar poderia estar de serviço nesse período dispensado (Não Tem como verificar se Ele Realmente Estaria de Serviço, 
+    portanto recalculamos a Escala)
+    '''
+
     if Id_Disp != 0:
         Militar_DispensaList = get_object_or_404(Militar_Dispensa, pk=Id_Disp)
         
         if Militar_DispensaList is not None:  
+            #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
+            #A Folga de toda a escala
+            servicoDel(DateBegin=Militar_DispensaList.Begin_Mil_Disp, IdMilitar=Id_Mil)
+
             Militar_DispensaList.delete()
             
     return HttpResponseRedirect(reverse('dispensa'))
 
+#Método de Adicionar Dispensa. Também é uma página simples de um FormModel
 def DispensaAdd(request, Id_Disp):
     
     PageTitle = ""
     
-    if Id_Disp != 0:
+    '''
+    Ao Adicionar Uma Dispensa em Um Militar Devemos verificar se o Militar Está de serviço Nesse Período.
+    Caso o Militar esteja de Serviço Recalculamos toda a Escala de Serviço
+    '''   
+
+    #Condição para verificar se o Id é Válido. Caso seja Válido o Form terá função de Update, caso contrário será de Insert
+    if Id_Disp != 0: 
         Militar_DispensaList = get_object_or_404(Militar_Dispensa, pk=Id_Disp) 
         form = Militar_DispensaForm(request.POST or None, instance=Militar_DispensaList)         
 
@@ -402,6 +460,16 @@ def DispensaAdd(request, Id_Disp):
             profile.user = request.user
             profile.save()
 
+            Begin_Mil_Disp  = form.cleaned_data['Begin_Mil_Disp']
+            End_Mil_Disp  = form.cleaned_data['End_Mil_Disp']
+            Id_Mil  = form.cleaned_data['Id_Mil']
+
+            #Condição para Verificar se o Militar não está de serviço nessa data
+            if Servico.objects.filter(Id_Matriz__Dt_Matriz__range = [Begin_Mil_Disp, End_Mil_Disp], Id_Mil = Id_Mil):
+                #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
+                #A Folga de toda a escala
+                servicoDel(DateBegin=Begin_Mil_Disp, IdMilitar=Id_Mil)
+
             return HttpResponseRedirect(reverse('dispensa'))
         else:
             print(form.errors)
@@ -413,7 +481,9 @@ def DispensaAdd(request, Id_Disp):
     
     return render(request, "PJI110/dispensaAdd.html", context)
 
-
+#Método para Verificar se o Dia da Semana é Sábado ou Domingo. Porque Sábado e Domingo são Designados para Escalas Vermelhas.
+#Os feriados devem ser incluídos 1 por 1 na Matriz. Infelizmente não podemos automatizar, porque o Batalhão deverá seguir o Calendário da Região Militar RM
+#Nem sempre a Região Militar segue o feriado nascional, estadual ou municipal
 def IsHolyday(self, *args, **kwargs):
 
     if self is None: return False
@@ -423,13 +493,21 @@ def IsHolyday(self, *args, **kwargs):
     else:
         return False
 
-def matrizAdd(request, Id_Matriz):
+#Método para Adicionar Matriz. Essa página não é igual as outras, pois o Form não permite Update, somente Create.
+#Essa diferença ocorre porque ao Inserir criamos uma matriz com um Intervalo de Dias para uma única Escala de Serviço, Mas
+#Ao alterar a Matriz alteramos Várias Escalas de Serviço em um Único Dia. (IMPORTANTE)
+def matrizAdd(request):
+
+    '''
+    Ao Alterarmos uma Matriz, devemos limpar os serviços para recalcular tudo novamente
+    '''
+    
     PageTitle = 'Add Matriz SV'
+
 
     if request.method == 'POST':
 
-
-        form = MatrizForm(request.POST, request.FILES)
+        form = MatrizAddForm(request.POST, request.FILES)
 
         if form.is_valid():
             DateBegin = form.cleaned_data['DtBegin_Matriz']
@@ -438,19 +516,23 @@ def matrizAdd(request, Id_Matriz):
             NumMil_Matriz = form.cleaned_data['NumMil_Matriz']
 
             while DateBegin <= DateEnd:
-                if Matriz.objects.filter(Id_SubTipEsc=Id_SubTipEsc, Dt_Matriz = DateBegin).count() == 0:
+                MatrizSearchObject = Matriz.objects.filter(Id_SubTipEsc=Id_SubTipEsc, Dt_Matriz = DateBegin)
+  
+                if  MatrizSearchObject.count() == 0:
                     Matriz.objects.create(
                             Id_SubTipEsc = Id_SubTipEsc,
                             Dt_Matriz = DateBegin,
                             NumMil_Matriz = NumMil_Matriz,
                             IsHolyday_Matriz = IsHolyday(DateBegin)
                         )
-                DateBegin = DateBegin + timedelta(days=1)     
+                
+                DateBegin = DateBegin + timedelta(days=1)   
 
+            servicoDel(DateBegin=DateBegin) #Exclui todos os serviços apartir de uma data
 
-        return HttpResponseRedirect(reverse('matriz'))
+            return HttpResponseRedirect(reverse('matriz'))
     else:
-        form = MatrizForm()
+        form = MatrizAddForm()
 
     context = {          
         'form':form,
@@ -459,7 +541,89 @@ def matrizAdd(request, Id_Matriz):
 
     return render(request, "PJI110/matrizAdd.html", context)   
 
+#Método para Excluir Matriz.
+def matrizDel(request):
 
+    '''
+    Igual ao Método de Add ao excluirmos dados de uma Matriz, devemos limpar os serviços para recalcular tudo novamente
+    '''
+
+    PageTitle = 'Del Matriz SV'
+
+    if request.method == 'POST':
+
+        form = MatrizDelForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            DateBegin = form.cleaned_data['DtBegin_Matriz']
+            DateEnd = form.cleaned_data['DtEnd_Matriz']
+            Id_SubTipEsc = form.cleaned_data['Id_SubTipEsc']
+
+            while DateBegin <= DateEnd:
+                MatrizSearchObject = Matriz.objects.filter(Id_SubTipEsc=Id_SubTipEsc, Dt_Matriz = DateBegin)
+
+                if MatrizSearchObject.count() != 0:
+                    for MatrizSearchItem in MatrizSearchObject:
+                        MatrizSearchItem.delete()
+                        
+                
+                DateBegin = DateBegin + timedelta(days=1)   
+            
+            servicoDel(DateBegin=DateBegin) #Exclui todos os serviços apartir de uma data
+
+            return HttpResponseRedirect(reverse('matriz'))
+    else:
+        form = MatrizDelForm()
+
+    context = {          
+        'form':form,
+        'PageTitle': PageTitle
+    } 
+
+    return render(request, "PJI110/matrizDel.html", context)     
+
+#Método para Excluir Matriz.
+def matrizEdit(request):
+
+    '''
+    Igual ao Método de Add ao Editarmos dados de uma Matriz, devemos limpar os serviços para recalcular tudo novamente
+    '''
+
+    PageTitle = 'Editar Matriz SV'
+
+    if request.method == 'POST':
+
+        form = MatrizEditForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            DateBegin = form.cleaned_data['DtBegin_Matriz']
+            DateEnd = form.cleaned_data['DtEnd_Matriz']
+            IsHolyday = form.cleaned_data['IsHolyday_Matriz']
+
+            while DateBegin <= DateEnd:
+                MatrizSearchObject = Matriz.objects.filter(Dt_Matriz = DateBegin)
+
+                if MatrizSearchObject.count() != 0:
+                    for MatrizSearchItem in MatrizSearchObject:
+                        MatrizSearchItem.IsHolyday_Matriz = IsHolyday
+                        MatrizSearchItem.save()
+                
+                DateBegin = DateBegin + timedelta(days=1)   
+
+            servicoDel(DateBegin=DateBegin) #Exclui todos os serviços apartir de uma data
+
+            return HttpResponseRedirect(reverse('matriz'))
+    else:
+        form = MatrizEditForm()
+
+    context = {          
+        'form':form,
+        'PageTitle': PageTitle
+    } 
+
+    return render(request, "PJI110/matrizEdit.html", context)      
+
+#Método para Adicionar Mês. É importante para criar filtros de Pesquisa com intervalos de 30 dias
 def addMonths(dt, months = 0):
     new_month = months + dt.month
     year_inc = 0
@@ -468,37 +632,41 @@ def addMonths(dt, months = 0):
         new_month -=12
     return dt.replace(month = new_month, year = dt.year+year_inc)
 
+#Método Principal para Exibir a Matriz na Página
 def matriz(request):
 
     PageTitle = 'Matriz SV'
+    MonthOfSearch = ''
+    TipEscOfMatriz = ''
+    SelectOfMatriz = ''
+    SubTipoEscalaList = ''
 
     if len(request.GET) > 0:
         for action in request.GET:
-            if action == "MatrizASearch":
-                MonthOfSearch = request.GET['MatrizASearch']
-                MonthOfMatrix = MonthOfMatrizForm(request.POST or None, instance=MonthOfSearch)
+            if action == "MatrizSearch":
+                MonthOfSearch = int(request.GET['DateOfMatriz'])
+                TipEscOfMatriz = int(request.GET['TipoEscalaOfMatriz'])
+                SelectOfMatriz = MatrizSelectForm(request.POST or None, instance={'DateOfMatriz':MonthOfSearch, 'TipoEscalaOfMatriz': TipEscOfMatriz})
             else:
                 if action == "MatrizAdd":
-                    return matrizAdd(request, 0)
+                    return matrizAdd(request)
                 else:
-                    if action == "MatrizEdit":
-                        return matrizAdd(request, request.GET['MatrizEdit'])
-                    # else:                          
-                    #     if action == "MatrizDel":
-                            #return matrizDel(request, request.GET['MatrizDel'])
+                    if action == "MatrizDel":
+                        return matrizDel(request)
+                    else:
+                        if action == "MatrizEdit":
+                            return matrizEdit(request)
     else:
-        MonthOfSearch= datetime.now().month
-        MonthOfMatrix = MonthOfMatrizForm()
+        MonthOfSearch = datetime.now().month
+        TipEscOfMatriz = 0
+        SelectOfMatriz = MatrizSelectForm()
         
-    # DateBegin = datetime(datetime.now().year, MonthOfSearch, 1)
-    # DateEnd =  addMonths(DateBegin, 1)
-
-    DateBegin = datetime(datetime.now().year, MonthOfSearch -1, 1)
+    DateBegin = datetime(datetime.now().year, MonthOfSearch, 1)
     DateEnd =  addMonths(DateBegin, 1)
+    
+    MatrizList = Matriz.objects.filter(Dt_Matriz__range=[DateBegin, DateEnd], Id_SubTipEsc__Id_TipEsc_id = TipEscOfMatriz).order_by('Dt_Matriz', 'Id_SubTipEsc')
 
-    MatrizList = Matriz.objects.filter(Dt_Matriz__range=[DateBegin, DateEnd]).order_by('Dt_Matriz', 'Id_SubTipEsc')
-     
-    SubTipoEscalaList = Matriz.objects.values('Id_SubTipEsc__Nome_SubTipEsc').order_by('Id_SubTipEsc').distinct()
+    SubTipoEscalaList = Matriz.objects.values('Id_SubTipEsc__Nome_SubTipEsc').filter(Id_SubTipEsc__Id_TipEsc_id = TipEscOfMatriz).order_by('Id_SubTipEsc').distinct()
 
     ListDate = list()
     ListEscala = list()
@@ -517,7 +685,7 @@ def matriz(request):
                 
                 if MatrizFor.count() > 0:
                     for ItemOfMatriz in MatrizFor:
-                        ListEscala.append([ItemOfMatriz.NumMil_Matriz])    
+                        ListEscala.append([ItemOfMatriz.NumMil_Matriz, ItemOfMatriz.IsHolyday_Matriz])    
                 else:     
                     ListEscala.append([0, False]) 
                     
@@ -532,24 +700,29 @@ def matriz(request):
         'PageTitle':PageTitle,
         'SubTipoEscalaList':SubTipoEscalaList,
         'ListDate':ListDate,
-        'MonthOfMatriz':MonthOfMatrizForm,
+        'MonthOfMatriz':SelectOfMatriz,
         
     } 
 
     return render(request, "PJI110/matriz.html", context, )  
 
+#Novamente devemos formatar os Dados antes de Passar para o Context, porque o Django não permite trabalhar com os dados no Template
+#Se fosse em uma linguagem mais robusta poderíamos fazer essa lógica específica de visualização e formatação dos dados no próprio código HTML.
 def FormatListServico(ListServico, SubTipoEscalaList):
     ListTempplate = list()
     
     #Seleciona Todos os Dias Que existem Sv
     for ItemListServico in ListServico: 
         ListTemporary = list()                           
+
+        #Para Cada Dia devemos verificar se existe todos os SubTipoEscala
         for ItemSubtipEsc in SubTipoEscalaList:
             flag = False
-            for ItemSvSubTipEsc in ItemListServico[1]:
+            for ItemSvSubTipEsc in ItemListServico[1]: #Caso encontre o SubTipoEscala no Dia Adicionamos os Dados e podemos executar um Break
                 if ItemSvSubTipEsc[0] ==  ItemSubtipEsc.id:
                     flag = True
                     ListTemporary.append([ItemSvSubTipEsc[0], ItemSvSubTipEsc[1], ItemSvSubTipEsc[2],ItemSvSubTipEsc[3]])
+                    break
             if flag: 
                 flag = False
             else:    
@@ -558,59 +731,81 @@ def FormatListServico(ListServico, SubTipoEscalaList):
     return ListTempplate
  
 
-
+#Método para Adicionar o Militar no Serviço
 def AppendMilitarIntoServico(ListMilitarDispensado, ListMilitaresServico, ListServico, ListTemp, ItemMatrizEscala):
     
+    '''
+    Para Adicionar o Militar no Serviço Devemos Realizar as seguintes Validções
+    '''
+    '''
+    Verificar se O Militar Está dispensa nesse dia de Serviço
+    '''
+    '''
+    Verificar Se o Militar Não foi adicionado no Model Serviço 48h antes ou 48 Depois Em outro TipoEscala.
+    Os Inserts dos Militares é Feito pela Prioridade da Escala de Serviço
+    '''
+    '''
+    Verificar Se o Militar não foi Adicionado no Model Serviço 48h antes no mesmo TipoEscala 
+    (Nesse Caso O Model não foi Salvo, mas apenas gerado por vetores, como é o caso da Escala PRETA e VERMELHA).
+    '''
+
     #Indice Começa em 0, porque é o Primeiro Militar da Lista é o próximo a ser escalado
     xV = 0
-    #Condição para não Adicionar o Militar que Esta Dispensado nesse Dia
-    while(ListMilitarDispensado.filter(Id_Mil = ListMilitaresServico[xV].id).count() >0):
-        #Se o militar não pode ser Escalado, então pegamos o Próximo da Lista Disponível
-        xV = xV + 1
+    LenListMilitaresServico = len(ListMilitaresServico)
+    if(LenListMilitaresServico > 0):
+        #Condição para não Adicionar o Militar que Esta Dispensado nesse Dia
+        while(ListMilitarDispensado.filter(Id_Mil = ListMilitaresServico[xV].id).count() >0):
+            #Se o militar não pode ser Escalado, então pegamos o Próximo da Lista Disponível
+            if(LenListMilitaresServico < (xV + 1)):
+                xV = xV + 1
+            else:
+                xV = 0    
 
-    #Condição para Verificar se o Militar Ja Está de Serviço em Outro Tipo de Servço
-    #A Condição Deverá Vericar 2 Dias Antes e 2 Dias Depois. Pois 48h é o Intervalo Mínimo entre 1 Serviço e Outro
-    DtBegin = ItemMatrizEscala.Dt_Matriz - timedelta(days=2)
-    DtEnd = ItemMatrizEscala.Dt_Matriz
-    while(Servico.objects.filter(Id_Matriz__Dt_Matriz__range=[DtBegin,DtEnd], Id_Mil = ListMilitaresServico[xV].Id_Mil).count() > 0):
-        xV = xV + 1 
+        #Condição para Verificar se o Militar Ja Está de Serviço em Outro Tipo de Servço
+        #A Condição Deverá Vericar 2 Dias Antes e 2 Dias Depois. Pois 48h é o Intervalo Mínimo entre 1 Serviço e Outro
+        DtBegin = ItemMatrizEscala.Dt_Matriz - timedelta(days=2)
+        DtEnd = ItemMatrizEscala.Dt_Matriz
+        while(Servico.objects.filter(Id_Matriz__Dt_Matriz__range=[DtBegin,DtEnd], Id_Mil = ListMilitaresServico[xV].Id_Mil).count() > 0):
+            if(LenListMilitaresServico < (xV + 1)):
+                xV = xV + 1
+            else:
+                xV = 0 
 
-    #Condição para Verificar se o Militar Já Está de Serviço Na Escala Preta
-    #A Condição Deverá Verificar 2 dias Antes. Pois o Intervalo Mínimo de 1 Serviço para Outro é também de 48h
-    NumListSV = len(ListServico)
-    y = NumListSV - 2
-    
-    if(y < 0):
-        y=0
-    
-    reset = False #Inicialização de variável
-    
-    while(y < NumListSV):
-        for ItemTipSv in ListServico[y][1]:
-            for Item in ItemTipSv[3]:    
-                while(Item[1] == ListMilitaresServico[xV].Id_Mil):
-                    xV = xV + 1 
-                    reset = True
+        #Condição para Verificar se o Militar Já Está de Serviço Na Escala Preta
+        #A Condição Deverá Verificar 2 dias Antes. Pois o Intervalo Mínimo de 1 Serviço para Outro é também de 48h
+        NumListSV = len(ListServico)
+        y = NumListSV - 2
+        
+        if(y < 0):
+            y=0
+        
+        reset = False #Inicialização de variável
+        
+        while(y < NumListSV):
+            for ItemTipSv in ListServico[y][1]:
+                for Item in ItemTipSv[3]:    
+                    #Caso o Militar Esteja nesses 2 dias pegamos o Próximo Militar da Escala 
+                    while(Item[1] == ListMilitaresServico[xV].Id_Mil):
+                        xV = xV + 1 
+                        reset = True
 
-        #Essa Condição é Nescessária, porque é um ERRo Lógico não verificar (Os 2 Dias Antes) para o Novo Militar Selecionado
-        #Sem Essa Condição, após sair do While o Código adiciona y + 1, então só estariamos verificando 1 Dia Antes
-        if (reset): 
-            y = NumListSV - 2
-            reset = False
-        else:
-            y = y + 1        
+            #Essa Condição é Nescessária, porque é um ERRo Lógico não verificar (Os 2 Dias Antes) para o Novo Militar Selecionado
+            #Sem Essa Condição, após sair do While o Código adiciona y + 1, então só estariamos verificando 1 Dia Antes
+            if (reset): 
+                y = NumListSV - 2
+                reset = False
+            else:
+                y = y + 1        
 
-    #Adiciona o Militar Na Lista de Escalados.
-    ListTemp.append([ListMilitaresServico[xV].Id_Mil.Id_PG.Nome_PG, ListMilitaresServico[xV].Id_Mil, ListMilitaresServico[xV].Id_Mil.Id_SU.Nome_SU]) 
+        #Adiciona o Militar Na Lista de Escalados.
+        ListTemp.append([ListMilitaresServico[xV].Id_Mil.Id_PG.Nome_PG, ListMilitaresServico[xV].Id_Mil, ListMilitaresServico[xV].Id_Mil.Id_SU.Nome_SU]) 
 
-    #Retiramos o Militar Escalado e Colocamos no final da Fila, pois ele passa a ser o Mais folgado na Escala de Serviço  
-    ListMilitaresServico.append(ListMilitaresServico[xV]) 
-    ListMilitaresServico.pop(xV)
+        #Retiramos o Militar Escalado e Colocamos no final da Fila, pois ele passa a ser o Mais folgado na Escala de Serviço  
+        ListMilitaresServico.append(ListMilitaresServico[xV]) 
+        ListMilitaresServico.pop(xV)
 
 
-'''
-Método Para Construir a Escala de Serviço. Esse Método está muito grande, então separei em uma função
-'''
+#Método Para Construir a Escala de Serviço. Esse Método está muito grande, então separei em uma função
 def BiuldServico(DateBegin, DateEnd, Id_TipEscForm, SubTipoEscalaList, ListServico):
     
     #Pesquisar a Matriz de Acordo com o Filtro do Usuário
@@ -718,9 +913,8 @@ def homeAdd(request, *args, **kwargs):
                             for ItenMil in  Item[3]:
                                 if(Servico.objects.filter(Id_Matriz = Item[2], Id_Mil = ItenMil[1].id).count() == 0):
                                     Servico.objects.create(Id_Matriz = Item[2], Id_Mil = ItenMil[1])
-                return render(request, "PJI110/home.html")
-
-
+                
+                return HttpResponseRedirect('./')
 
     else:
         form = ServicoForm()
@@ -728,14 +922,6 @@ def homeAdd(request, *args, **kwargs):
         #Recupera o Primerio Tipo Escala para inserir no FORM.
         filtroTipoEscala = TipoEscala.objects.all()[:1][0]
         ServicoList = Servico.objects.filter(Id_Matriz__Id_SubTipEsc__Id_TipEsc = filtroTipoEscala).order_by('-Id_Matriz__Dt_Matriz')[:5]
-
-        #Caso não Exista Serviços na Data da data padrão será HOJE. Senão a Data Padrão será a data do Ultimo Serviço
-        if ServicoList.count() == 0:           
-            form['DtBegin_Servico'].value = datetime.now
-        else:
-            form['DtBegin_Servico'].value = ServicoList[0].Id_Matriz.DtMatriz   
-
-
 
     context = {  
         'ListServicoTemplate':ListServicoTemplate,
@@ -757,6 +943,9 @@ def Home(request, *args, **kwargs):
     Id_TipEscForm = TipoEscala.objects.all()[:1][0]
 
     if request.method == 'POST':
+        
+        if "ServicoAdd" in request.POST: return HttpResponseRedirect('homeAdd')
+
         form = ServicoForm(request.POST, request.FILES)
 
         if form.is_valid():
@@ -766,50 +955,74 @@ def Home(request, *args, **kwargs):
     else:
         form = ServicoForm()
     
-    #Atualiza a Caixa de Pesquisa de Acorodo com o Filtro do Usuário
+    #Atualiza a Caixa de Pesquisa de Acordo com o Filtro do Usuário
     SubTipoEscalaList  = SubTipoEscala.objects.filter(Id_TipEsc = Id_TipEscForm)  
 
+    #Recupera todos os Serviços no Período Selecionado
     ListServico = Servico.objects.filter(Id_Matriz__Dt_Matriz__range=[DateBegin, DateEnd], Id_Matriz__Id_SubTipEsc__Id_TipEsc = Id_TipEscForm)
 
     if(len(ListServico)):
         
-        Index = ListServico[0].Id_Matriz
-
-        ListMilTemp = list()
         ListSubTipEscTemp = list()
 
+        #Incialização das Variáveis
+        x = -1
+        IMatriz = ListServico[0].Id_Matriz
+        ISubTipEsc = ""
+
+        #Inicia a Varredura em Todos os Itens da Pesquisa
         for ItemServico in ListServico:
             
-            if(Index.Id_SubTipEsc != ItemServico.Id_Matriz.Id_SubTipEsc):
-                ListSubTipEscTemp.append([Index.Id_SubTipEsc, Index, ListMilTemp])
-                ListMilTemp = list()
-                Index = ItemServico.Id_Matriz
-
-            if(Index.Dt_Matriz != ItemServico.Id_Matriz.Dt_Matriz):
-                ListServicoTemp.append([Index.Dt_Matriz, ListSubTipEscTemp])
+            #Adiciona Todos os Tipo de Serviços na mesma Data
+            if(IMatriz.Dt_Matriz != ItemServico.Id_Matriz.Dt_Matriz):
+                
+                ListServicoTemp.append([IMatriz.Dt_Matriz, ListSubTipEscTemp]) #Comando para Adicionar a Data com as Informações
+                
+                #Limpa os Tipo de Serviços para o Próximo Dia
                 ListSubTipEscTemp = list()
-                Index = ItemServico.Id_Matriz.Dt_Matriz
+                ISubTipEsc = ""
+                x = -1
 
-            ListMilTemp.append(ItemServico.Id_Mil.NomeG_Mil)    
+                #Atualiza a nova Data na Variável de Comparação
+                IMatriz = ItemServico.Id_Matriz
+               
+            #Condição para Agrupar Todos Os Militares no mesmo SubTipoServiço 
+            if(ISubTipEsc != ItemServico.Id_Matriz.Id_SubTipEsc):
+                ISubTipEsc = ItemServico.Id_Matriz.Id_SubTipEsc  
+                ListSubTipEscTemp.append([ISubTipEsc, ItemServico.Id_Matriz, []]) #O Colchetes (Posição 2) é para inserir os Militares Futuramente
+                x = x + 1                
 
-        ListSubTipEscTemp.append([Index.Id_SubTipEsc, Index, ListMilTemp])
-        ListServicoTemp.append([Index.Dt_Matriz, ListSubTipEscTemp])
+            #A Lista de Militares é a Ultima Posição (2) do Vetor ListSubTipEscTemp
+            ListSubTipEscTemp[x][2].append(ItemServico.Id_Mil)   
 
+        ListServicoTemp.append([IMatriz.Dt_Matriz, ListSubTipEscTemp])
+
+        
         xIndex = 0
+        
+        #O Django não permite criar Flag no Template, Logo se existir Algum SubTipoServiço que esteja Vazio temos que Iserir uma Informação "0"
+        #Para Isso Temos que Comparar a Matriz de Serviço com todos os SubTipoServiço e quando não existir na MatrizServiço Adicionamos o "0"
         for Dias in ListServicoTemp:
             
-            ListServicoTemplate.append([Dias[0]])
+            ListServicoTemplate.append([Dias[0], []])
 
+            #Recupera e Itera Todos os SubTipoServiço
             for TiposEscala in SubTipoEscalaList:
                 Flag = False
+                y = 0
+
+                #Condição para Verificar se Esse SubTipoServiço existe no Dia
                 for ItemTipoEscala in Dias[1]:
-                    if(ItemTipoEscala[0] == TiposEscala): Flag = True
+                    if(ItemTipoEscala[0] == TiposEscala): 
+                        Flag = True
+                        break
+                    y = y + 1
 
                 if Flag:
-                    ListServicoTemplate[xIndex].append([[ItemTipoEscala[0], ItemTipoEscala[1], ItemTipoEscala[2]]])
+                    ListServicoTemplate[xIndex][1].append([Dias[1][y][0], Dias[1][y][1], Dias[1][y][2]])
                     Flag = False
                 else:
-                    ListServicoTemplate[xIndex].append([[TiposEscala, 0,['---']]])    
+                    ListServicoTemplate[xIndex][1].append([TiposEscala, 0,['---']])    
             xIndex = xIndex + 1
 
 

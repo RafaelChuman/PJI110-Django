@@ -113,8 +113,6 @@ class Militar_TipoForm(forms.ModelForm):
 
 
 class Militar_TipoEditForm(forms.ModelForm):
-    # Id_Mil = forms.ModelMultipleChoiceField(widget=forms.Select(), queryset=Militar.objects.all(), to_field_name="id" )
-    # Id_TipEsc = forms.ModelChoiceField(queryset=TipoEscala.objects.all(), to_field_name="id")
     DtSv_P_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
     NumSv_P_Mil_TipEsc = forms.IntegerField(initial=0)
     DtSv_V_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
@@ -127,14 +125,8 @@ class Militar_TipoEditForm(forms.ModelForm):
         super(Militar_TipoEditForm, self).__init__(*args, **kwargs)
 
         if instance:
-            # self.initial['Id_Mil'] = self.instance.Id_Mil
-            # self.initial['Id_TipEsc'] = self.instance.Id_TipEsc
             self.initial['DtSv_P_Mil_TipEsc'] = self.instance.DtSv_P_Mil_TipEsc.isoformat()
             self.initial['DtSv_V_Mil_TipEsc'] = self.instance.DtSv_V_Mil_TipEsc.isoformat()
-            # self.fields['Id_Mil'].widget.attrs['disabled'] = 'True'
-            # self.fields['Id_Mil'].required = 'False'
-            # self.fields['Id_TipEsc'].widget.attrs['disabled'] = 'True'
-            # self.fields['Id_TipEsc'].required = 'False'
             
     class Meta:
         model = Militar_Tipo
@@ -175,21 +167,51 @@ MONTH_CHOICES =(
     ("12", "Dezembro"),
 )
 
-class MonthOfMatrizForm(forms.Form):
+class MatrizSelectForm(forms.Form):
     DateOfMatriz = forms.ChoiceField(choices = MONTH_CHOICES, initial = datetime.now().month)
+    TipoEscalaOfMatriz = forms.ModelChoiceField(queryset=TipoEscala.objects.all(), to_field_name="id")
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
 
-        super(MonthOfMatrizForm, self).__init__(*args, **kwargs)
+        super(MatrizSelectForm, self).__init__()
 
         if instance:
-            self.initial['MonthOfMatrizForm'] = self.instance.MonthOfMatrizForm
+            self.base_fields['DateOfMatriz'].initial = instance['DateOfMatriz']
+            self.base_fields['TipoEscalaOfMatriz'].initial = instance['TipoEscalaOfMatriz']
 
+class MatrizDelForm(forms.Form):
 
+    Id_SubTipEsc =  forms.ModelChoiceField(queryset=SubTipoEscala.objects.all(), to_field_name="id")
+    DtBegin_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    DtEnd_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
 
+        super(MatrizDelForm, self).__init__(*args, **kwargs)
 
-class MatrizForm(forms.Form):
+        if instance:
+            self.initial['Id_SubTipEsc'] = self.instance.Id_SubTipEsc
+            self.initial['DtBegin_Matriz'] = self.instance.DtBegin_Matriz.isoformat()
+            self.initial['DtEnd_Matriz'] = self.instance.DtEnd_Matriz.isoformat()
+
+class MatrizEditForm(forms.Form):
+    DtBegin_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    DtEnd_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
+    IsHolyday_Matriz = forms.BooleanField(initial=False, required= False)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+
+        super(MatrizEditForm, self).__init__(*args, **kwargs)
+
+        if instance:
+            self.initial['Id_SubTipEsc'] = self.instance.Id_SubTipEsc
+            self.initial['DtBegin_Matriz'] = self.instance.DtBegin_Matriz.isoformat()
+            self.initial['DtEnd_Matriz'] = self.instance.DtEnd_Matriz.isoformat()
+            self.initial['IsHolyday_Matriz'] = self.instance.IsHolyday_Matriz.isoformat()
+
+class MatrizAddForm(forms.Form):
 
     Id_SubTipEsc =  forms.ModelChoiceField(queryset=SubTipoEscala.objects.all(), to_field_name="id")
     DtBegin_Matriz = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
@@ -198,7 +220,7 @@ class MatrizForm(forms.Form):
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
 
-        super(MatrizForm, self).__init__(*args, **kwargs)
+        super(MatrizAddForm, self).__init__(*args, **kwargs)
 
         if instance:
             self.initial['Id_SubTipEsc'] = self.instance.Id_SubTipEsc
