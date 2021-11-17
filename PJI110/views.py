@@ -31,30 +31,61 @@ from PJI110.models import Militar_Tipo, SubTipoEscala
 from PJI110.models import Matriz 
 from PJI110.models import Servico 
 
-#Deletas Todos os Serviços apartir de uma Data Incial, Quando Alteramos um TipEscala
+#Deletas Todos os Serviços apartir de uma Data Incial, Deletamos Pelo TipEsc Serviço que o Militar Participa
 def servicoDel(DateBegin, IdMilitar):
 
-    SubTipEscalaList = Militar_Tipo.objects.filter(Id_Mil = IdMilitar)
+    #Se não Existe nenhum Militar Como Parâetro Pegamos Todos os TipEsc Serviço da Tabela TipoEscala
+    if IdMilitar != 0:
+        TipEscalaList = Militar_Tipo.objects.filter(Id_Mil = IdMilitar).values("Id_TipEsc")
+    else:
+        TipEscalaList = TipoEscala.objects.all().values("id")
 
-    if SubTipEscalaList.count != 0:
-        for SubTipEscalaItem in SubTipEscalaList:
-            ServicoSearchObject = Servico.objects.filter(Id_Matriz__Dt_Matriz__gte = DateBegin, Id_Matriz__Id_SubTipEsc__Id_TipEsc = SubTipEscalaItem.id)
+    if TipEscalaList.count != 0:
 
-            if ServicoSearchObject.count() != 0:
-                for ServicoSearchItem in ServicoSearchObject:
-                    ServicoSearchItem.delete()
+        for TipEscalaItem in TipEscalaList:
+        
+            #Inicializa a Variável para Retornar o Id. Estou usando o Parâmetro [0], porque TipEscalaItem pode ser resgatado
+            #De 2 tipos de Tabelas Diferentes, Logo não podemos Usar o "Nome do Campo" como Parâmetro
+            Id_TipEsc = TipEscalaItem[0]
+
+            #Resgata todos os Próximos Serviços que o Militar Tirou com o Mesmo SubTipo Serviço
+            ServicoDelList = Servico.objects.filter(Id_Matriz__Dt_Matriz__gte = DateBegin, Id_Matriz__Id_SubTipEsc__Id_TipEsc = Id_TipEsc)
+
+            #Condição para Validar a Operação de Delete e Update. Detalhe 
+            #(As Duas operações devem ser realizadas juntas. Não devemos realizar uma sem a outra)
+            if ServicoDelList.count() != 0:
+
+                #Deleta Todos os Próximos Serviços do mesmo SubTipo Serviço
+                for ServicoDelItem in ServicoDelList:
+                    IsHolyday = ServicoDelItem.IsHolyday_Matriz
+                    Id_Militar = ServicoDelItem.Id_Militar
+
+                    ServicoDelItem.delete() #Comando para Deletar o Serviço
+
+                    #Pesquisa O Ultimo Serviço que o Militar Tirou, Para o Mesmo SubTipo Serviço.
+                    #A Pesquisa não é feita por Ultimo Serviço. Porque o Militar Pode Tirar Serviços com Outros SubTipo Serviço.
+                    ServicoLast = Servico.objects.filter(   Id_Matriz__Dt_Matriz__lte = DateBegin, 
+                                                            Id_Mil = Id_Militar,
+                                                            Id_Matriz__Id_SubTipEsc__Id_TipEsc = Id_TipEsc,
+                                                            Id_Matriz__IsHolyday_Matriz = IsHolyday)[:1][0]
+
+                    MilitarTipoUpd = Militar_Tipo.objects.filter(Id_Mil = Id_Militar, Id_TipEsc = Id_TipEsc)[:1][0]                                                  
+
+                    #Condição para verificar se A Data do ultimo Serviço é Diferente do 
+                    if IsHolyday:
+                        if ServicoLast.Id_Matriz__Dt_Matriz != MilitarTipoUpd.DtSv_V_Mil_TipEsc:
+                            MilitarTipoUpd.DtSv_V_Mil_TipEsc = ServicoLast.Id_Matriz__Dt_Matriz
+                            MilitarTipoUpd.NumSv_V_Mil_TipEsc = MilitarTipoUpd.NumSv_V_Mil_TipEsc - 1
+                            MilitarTipoUpd.save()
+                    else:
+                        if ServicoLast.Id_Matriz__Dt_Matriz != ServicoDelItem.DtSv_P_Mil_TipEsc:
+                            MilitarTipoUpd.DtSv_P_Mil_TipEsc = ServicoLast.Id_Matriz__Dt_Matriz
+                            MilitarTipoUpd.NumSv_P_Mil_TipEsc = MilitarTipoUpd.NumSv_P_Mil_TipEsc - 1
+                            MilitarTipoUpd.save()
 
 #Deletas Todos os Serviços apartir de uma Data Incial
 def servicoDel(DateBegin):
-
-    ServicoSearchObject = Servico.objects.filter(Id_Matriz__Dt_Matriz__gte=DateBegin)
-
-    if ServicoSearchObject.count() != 0:
-        for ServicoSearchItem in ServicoSearchObject:
-            ServicoSearchItem.delete()
-                
-        
-    
+    servicoDel(DateBegin=DateBegin, IdMilitar=0)
 
 
 #Função para Deletar um Militar a Partir de um ID
@@ -913,8 +944,21 @@ def homeAdd(request, *args, **kwargs):
                             for ItenMil in  Item[3]:
                                 if(Servico.objects.filter(Id_Matriz = Item[2], Id_Mil = ItenMil[1].id).count() == 0):
                                     Servico.objects.create(Id_Matriz = Item[2], Id_Mil = ItenMil[1])
-                
+                                    
+                                    #Recupera o Único Registro da Tabela Militar_Tipo. Ele retorna a Informação do ultimo Serviço.
+                                    MilitarTipoServicoUpd = Militar_Tipo.objects.filter(Id_Mil = ItenMil[1], Id_TipEsc = Id_TipEscForm)[:1][0]
+                                    
+                                    if( Item[2].IsHolyday_Matriz == True):
+                                        MilitarTipoServicoUpd.DtSv_V_Mil_TipEsc = Item[2].Dt_Matriz
+                                        MilitarTipoServicoUpd.NumSv_V_Mil_TipEsc = MilitarTipoServicoUpd.NumSv_V_Mil_TipEsc + 1
+                                    else:
+                                        MilitarTipoServicoUpd.DtSv_P_Mil_TipEsc = Item[2].Dt_Matriz
+                                        MilitarTipoServicoUpd.NumSv_P_Mil_TipEsc = MilitarTipoServicoUpd.NumSv_P_Mil_TipEsc + 1
+                                    
+                                    MilitarTipoServicoUpd.save()
+
                 return HttpResponseRedirect('./')
+
 
     else:
         form = ServicoForm()
