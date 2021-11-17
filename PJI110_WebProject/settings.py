@@ -23,10 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pzaq=f@ubzl(7n7ry^@5cd88@^hzusf9*()xe8%6z4uw-6alq*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
+#Variável Específica do HEROKU, nescessária para fazer o Deploy.
+#DISABLE_COLLECTSTATIC=1
 
 # Application definition
 
