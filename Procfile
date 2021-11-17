@@ -1,0 +1,1 @@
+web: gunicorn app:PJI110_WebProject
