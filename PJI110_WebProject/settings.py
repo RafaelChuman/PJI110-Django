@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pzaq=f@ubzl(7n7ry^@5cd88@^hzusf9*()xe8%6z4uw-6alq*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -76,16 +76,29 @@ WSGI_APPLICATION = 'PJI110_WebProject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'PJI110',
+#         'USER': 'postgres',
+#         'PASSWORD':'20101994',
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'PJI110',
-        'USER': 'postgres',
-        'PASSWORD':'20101994',
-        'HOST': '127.0.0.1',
+        'NAME': 'demc0q3drf9031',
+        'USER': 'iwvsifgquofdza',
+        'PASSWORD':'5ea4c5a64ea4a0cf26a2f1cc3e44a004b85770f9ddb9db440e3bf4316abb6dc8',
+        'HOST': 'ec2-54-146-82-179.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
+
+
 
 
 # Password validation

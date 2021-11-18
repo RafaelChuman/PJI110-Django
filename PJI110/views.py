@@ -2,7 +2,7 @@
 from datetime import date, timedelta
 import re
 import sys
-from typing import List
+from typing import Counter, List
 from django.core.checks import messages
 from django.forms.fields import NullBooleanField
 from django.forms.forms import Form
@@ -984,7 +984,10 @@ def Home(request, *args, **kwargs):
     ListServicoTemp = list()
     DateBegin = timezone.now()
     DateEnd = timezone.now()
-    Id_TipEscForm = TipoEscala.objects.all()[:1][0]
+    Id_TipEscForm = TipoEscala.objects.all()[:1]
+
+    if len(Id_TipEscForm):
+        Id_TipEscForm = Id_TipEscForm[0]
 
     if request.method == 'POST':
         
