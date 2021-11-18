@@ -1,1 +1,1 @@
-web:gunicorn PJI110_WebProject:app
+web:gunicorn app:PJI110_WebProject
