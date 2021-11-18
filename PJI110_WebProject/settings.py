@@ -90,10 +90,10 @@ WSGI_APPLICATION = 'PJI110_WebProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'demc0q3drf9031',
-        'USER': 'iwvsifgquofdza',
-        'PASSWORD':'5ea4c5a64ea4a0cf26a2f1cc3e44a004b85770f9ddb9db440e3bf4316abb6dc8',
-        'HOST': 'ec2-54-146-82-179.compute-1.amazonaws.com',
+        'NAME': 'd1db8rkvg9c3f6',
+        'USER': 'jrfmvnnocxwfan',
+        'PASSWORD':'7a1bb07f6e79064ed74a7c0a3281d188a9c7d7fb4412445825f89b81e7311dd0',
+        'HOST': 'ec2-3-209-38-221.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }

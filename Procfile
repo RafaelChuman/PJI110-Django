@@ -1,1 +1,1 @@
-web:gunicorn app:pji110-webproject
+web:gunicorn PJI110_WebProject.wsgi
