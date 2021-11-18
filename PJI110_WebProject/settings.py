@@ -26,13 +26,14 @@ SECRET_KEY = 'django-insecure-pzaq=f@ubzl(7n7ry^@5cd88@^hzusf9*()xe8%6z4uw-6alq*
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    pji110-webproject.herokuapp.com,
+    'pji110-webproject.herokuapp.com',
 ]
 
 #Variável Específica do HEROKU, nescessária para fazer o Deploy.
 #DISABLE_COLLECTSTATIC=1
 
 # Application definition
+DISABLE_COLLECTSTATIC=1
 
 INSTALLED_APPS = [
     'django.contrib.admin',
