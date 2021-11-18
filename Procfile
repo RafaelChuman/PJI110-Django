@@ -1,1 +1,1 @@
-web:gunicorn PJI110_WebProject.wsgi
+web: gunicorn PJI110_WebProject.wsgi
