@@ -14,6 +14,7 @@ from django.views.generic import ListView
 from django import forms
 from django.http import Http404
 from django.utils import timezone
+from django.db.models import F
 
 from django.db.models.query import QuerySet
 from django.db.models import Prefetch
@@ -36,17 +37,17 @@ def servicoDel(DateBegin, IdMilitar):
 
     #Se não Existe nenhum Militar Como Parâetro Pegamos Todos os TipEsc Serviço da Tabela TipoEscala
     if IdMilitar != 0:
-        TipEscalaList = Militar_Tipo.objects.filter(Id_Mil = IdMilitar).values("Id_TipEsc")
+        TipEscalaList = Militar_Tipo.objects.annotate(newid=F('Id_TipEsc')).filter(Id_Mil = IdMilitar).values("newid")
     else:
-        TipEscalaList = TipoEscala.objects.all().values("id")
+        TipEscalaList = TipoEscala.objects.annotate(newid=F('id')).values("newid")
 
-    if TipEscalaList.count != 0:
+    if len(TipEscalaList):
 
         for TipEscalaItem in TipEscalaList:
         
             #Inicializa a Variável para Retornar o Id. Estou usando o Parâmetro [0], porque TipEscalaItem pode ser resgatado
             #De 2 tipos de Tabelas Diferentes, Logo não podemos Usar o "Nome do Campo" como Parâmetro
-            Id_TipEsc = TipEscalaItem[0]
+            Id_TipEsc = TipEscalaItem["newid"]
 
             #Resgata todos os Próximos Serviços que o Militar Tirou com o Mesmo SubTipo Serviço
             ServicoDelList = Servico.objects.filter(Id_Matriz__Dt_Matriz__gte = DateBegin, Id_Matriz__Id_SubTipEsc__Id_TipEsc = Id_TipEsc)
@@ -84,8 +85,8 @@ def servicoDel(DateBegin, IdMilitar):
                             MilitarTipoUpd.save()
 
 #Deletas Todos os Serviços apartir de uma Data Incial
-def servicoDel(DateBegin):
-    servicoDel(DateBegin=DateBegin, IdMilitar=0)
+def servicoDel1(DateBegin):
+    servicoDel(DateBegin, 0)
 
 
 #Função para Deletar um Militar a Partir de um ID
@@ -106,7 +107,7 @@ def militarDel(request, IdMil):
 
             #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
             #A Folga de toda a escala
-            servicoDel(DateBegin=datetime.now(), IdMilitar=IdMil)
+            servicoDel(datetime.now(), IdMil)
 
             MilitarTipoList = Militar_Tipo.objects.filter(Id_Mil = IdMil)
             if MilitarTipoList.count() != 0:
@@ -218,14 +219,14 @@ def EscalaDelMil(request, MilId, TipEscID):
     Ao Excluir Uma Associação de um Militar com Uma Escala de Serviço Devemos excluir todos os Serviços desse Militar Apartir da Data Atual do Sistema
     '''
 
-    if MilId != 0 & TipEscID != 0:
+    if MilId != 0 and TipEscID != 0:
         Militar_Tipo_Object =  Militar_Tipo.objects.get(Id_Mil = MilId, Id_TipEsc = TipEscID)
         
         if Militar_Tipo_Object is not None:  
 
             #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
             #A Folga de toda a escala
-            servicoDel(DateBegin=datetime.now(), IdMilitar=MilId)
+            servicoDel(datetime.now(), MilId)
 
             Militar_Tipo_Object.delete()
            
@@ -253,7 +254,7 @@ def escalaEdit(request, id_Militar, id_TipoEscala):
 
             #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
             #A Folga de toda a escala
-            servicoDel(DateBegin=datetime.now(), IdMilitar=form.cleaned_data['Id_Mil'])
+            servicoDel(datetime.now(), form.cleaned_data['Id_Mil'])
 
             return HttpResponseRedirect(reverse('escala'))
         else:
@@ -292,7 +293,7 @@ def EscalaAdd(request, SubTipEscID):
                     Id_TipEsc = Id_SubTipoEscalaInstance.Id_TipEsc,
                 )
 
-                servicoDel(DateBegin=datetime.now(),id_Mil = militar)   #Limpa Todos os Serviços do TipEsc que o Militar Está inserido
+                servicoDel(datetime.now(),militar)   #Limpa Todos os Serviços do TipEsc que o Militar Está inserido
                         
         return HttpResponseRedirect(reverse('escala'))
     else:
@@ -456,7 +457,7 @@ def DispensaDel(request, Id_Disp, Id_Mil):
         if Militar_DispensaList is not None:  
             #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
             #A Folga de toda a escala
-            servicoDel(DateBegin=Militar_DispensaList.Begin_Mil_Disp, IdMilitar=Id_Mil)
+            servicoDel(Militar_DispensaList.Begin_Mil_Disp, Id_Mil)
 
             Militar_DispensaList.delete()
             
@@ -499,7 +500,7 @@ def DispensaAdd(request, Id_Disp):
             if Servico.objects.filter(Id_Matriz__Dt_Matriz__range = [Begin_Mil_Disp, End_Mil_Disp], Id_Mil = Id_Mil):
                 #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
                 #A Folga de toda a escala
-                servicoDel(DateBegin=Begin_Mil_Disp, IdMilitar=Id_Mil)
+                servicoDel(Begin_Mil_Disp, Id_Mil)
 
             return HttpResponseRedirect(reverse('dispensa'))
         else:
@@ -559,7 +560,7 @@ def matrizAdd(request):
                 
                 DateBegin = DateBegin + timedelta(days=1)   
 
-            servicoDel(DateBegin=DateBegin) #Exclui todos os serviços apartir de uma data
+            servicoDel1(DateBegin) #Exclui todos os serviços apartir de uma data
 
             return HttpResponseRedirect(reverse('matriz'))
     else:
@@ -600,7 +601,7 @@ def matrizDel(request):
                 
                 DateBegin = DateBegin + timedelta(days=1)   
             
-            servicoDel(DateBegin=DateBegin) #Exclui todos os serviços apartir de uma data
+            servicoDel1(DateBegin) #Exclui todos os serviços apartir de uma data
 
             return HttpResponseRedirect(reverse('matriz'))
     else:
@@ -641,7 +642,7 @@ def matrizEdit(request):
                 
                 DateBegin = DateBegin + timedelta(days=1)   
 
-            servicoDel(DateBegin=DateBegin) #Exclui todos os serviços apartir de uma data
+            servicoDel1(DateBegin) #Exclui todos os serviços apartir de uma data
 
             return HttpResponseRedirect(reverse('matriz'))
     else:
