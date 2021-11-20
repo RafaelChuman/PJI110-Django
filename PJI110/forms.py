@@ -64,13 +64,13 @@ class MilitarForm(forms.ModelForm):
        else:
            raise forms.ValidationError("Nome de Guerra do Militar Inválido")
 
-class DispensaModelChoiceField(forms.ModelChoiceField):
+class MilitarModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return "{}".format(obj.Id_PG.Nome_PG + " " + obj.NomeG_Mil)
 
 class Militar_DispensaForm(forms.ModelForm):
     Id_Disp = forms.ModelChoiceField(queryset=Dispensa.objects.all(), to_field_name="id" )
-    Id_Mil = DispensaModelChoiceField(queryset=Militar.objects.select_related("Id_PG").filter(Vsb_Mil = True).order_by("-Id_PG", "NomeG_Mil"), to_field_name="id")
+    Id_Mil = MilitarModelChoiceField(queryset=Militar.objects.select_related("Id_PG").filter(Vsb_Mil = True).order_by("-Id_PG", "NomeG_Mil"), to_field_name="id")
     Begin_Mil_Disp = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}))
     End_Mil_Disp = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}))
 
@@ -88,8 +88,13 @@ class Militar_DispensaForm(forms.ModelForm):
         model = Militar_Dispensa
         fields = ("Id_Disp","Id_Mil", "Begin_Mil_Disp", "End_Mil_Disp" )
 
+
+class MilitarModelMultipleChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "{}".format(obj.Id_PG.Nome_PG + " " + obj.NomeG_Mil)
+
 class Militar_TipoForm(forms.ModelForm):
-    Id_Mil = forms.ModelMultipleChoiceField(widget=forms.SelectMultiple(attrs={'class': 'ModelMultipleChoiceField'}), queryset=Militar.objects.all(), to_field_name="id" )
+    Id_Mil = MilitarModelMultipleChoiceField(widget=forms.SelectMultiple(attrs={'class': 'ModelMultipleChoiceField'}), queryset=Militar.objects.all(), to_field_name="id" )
     Id_TipEsc = forms.ModelChoiceField(queryset=SubTipoEscala.objects.all(), to_field_name="id")
     DtSv_P_Mil_TipEsc = forms.DateField(widget = forms.DateInput(attrs = {'type': 'date'}), initial= datetime.now)
     NumSv_P_Mil_TipEsc = forms.IntegerField(initial=0)
@@ -163,7 +168,7 @@ MONTH_CHOICES =(
     ("8", "Agosto"),
     ("9", "Setebro"),
     ("10", "Outubro"),
-    ("11", "Novebro"),
+    ("11", "Novembro"),
     ("12", "Dezembro"),
 )
 
@@ -172,13 +177,12 @@ class MatrizSelectForm(forms.Form):
     TipoEscalaOfMatriz = forms.ModelChoiceField(queryset=TipoEscala.objects.all(), to_field_name="id")
 
     def __init__(self, *args, **kwargs):
-        instance = kwargs.get('instance', None)
+        super(MatrizSelectForm, self).__init__(*args, **kwargs)
+    
+        if len(self.files):
+            self.data['DateOfMatriz'] = self.files['DateOfMatriz']
+            self.data['TipoEscalaOfMatriz'] = self.files['TipoEscalaOfMatriz']
 
-        super(MatrizSelectForm, self).__init__()
-
-        if instance:
-            self.base_fields['DateOfMatriz'].initial = instance['DateOfMatriz']
-            self.base_fields['TipoEscalaOfMatriz'].initial = instance['TipoEscalaOfMatriz']
 
 class MatrizDelForm(forms.Form):
 

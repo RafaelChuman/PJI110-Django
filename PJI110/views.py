@@ -58,8 +58,8 @@ def servicoDel(DateBegin, IdMilitar):
 
                 #Deleta Todos os Próximos Serviços do mesmo SubTipo Serviço
                 for ServicoDelItem in ServicoDelList:
-                    IsHolyday = ServicoDelItem.IsHolyday_Matriz
-                    Id_Militar = ServicoDelItem.Id_Militar
+                    IsHolyday = ServicoDelItem.Id_Matriz.IsHolyday_Matriz
+                    Id_Militar = ServicoDelItem.Id_Mil
 
                     ServicoDelItem.delete() #Comando para Deletar o Serviço
 
@@ -68,19 +68,29 @@ def servicoDel(DateBegin, IdMilitar):
                     ServicoLast = Servico.objects.filter(   Id_Matriz__Dt_Matriz__lte = DateBegin, 
                                                             Id_Mil = Id_Militar,
                                                             Id_Matriz__Id_SubTipEsc__Id_TipEsc = Id_TipEsc,
-                                                            Id_Matriz__IsHolyday_Matriz = IsHolyday)[:1][0]
+                                                            Id_Matriz__IsHolyday_Matriz = IsHolyday)[:1]
+                    if len(ServicoLast): 
+                        ServicoLast = ServicoLast[0]
+                    else:
+                        LastMatriz = Matriz()
+                        format = '%d/%m/%Y'
+                        LastMatriz.Dt_Matriz = datetime.strptime('01/01/0001', format)
+                        ServicoLast = Servico()
+                        ServicoLast.Id_Matriz = LastMatriz
+                        ServicoLast.Id_Mil = Id_Militar
+                        
 
                     MilitarTipoUpd = Militar_Tipo.objects.filter(Id_Mil = Id_Militar, Id_TipEsc = Id_TipEsc)[:1][0]                                                  
 
                     #Condição para verificar se A Data do ultimo Serviço é Diferente do 
                     if IsHolyday:
-                        if ServicoLast.Id_Matriz__Dt_Matriz != MilitarTipoUpd.DtSv_V_Mil_TipEsc:
-                            MilitarTipoUpd.DtSv_V_Mil_TipEsc = ServicoLast.Id_Matriz__Dt_Matriz
+                        if ServicoLast.Id_Matriz.Dt_Matriz != MilitarTipoUpd.DtSv_V_Mil_TipEsc:
+                            MilitarTipoUpd.DtSv_V_Mil_TipEsc = ServicoLast.Id_Matriz.Dt_Matriz
                             MilitarTipoUpd.NumSv_V_Mil_TipEsc = MilitarTipoUpd.NumSv_V_Mil_TipEsc - 1
                             MilitarTipoUpd.save()
                     else:
-                        if ServicoLast.Id_Matriz__Dt_Matriz != ServicoDelItem.DtSv_P_Mil_TipEsc:
-                            MilitarTipoUpd.DtSv_P_Mil_TipEsc = ServicoLast.Id_Matriz__Dt_Matriz
+                        if ServicoLast.Id_Matriz.Dt_Matriz != MilitarTipoUpd.DtSv_P_Mil_TipEsc:
+                            MilitarTipoUpd.DtSv_P_Mil_TipEsc = ServicoLast.Id_Matriz.Dt_Matriz
                             MilitarTipoUpd.NumSv_P_Mil_TipEsc = MilitarTipoUpd.NumSv_P_Mil_TipEsc - 1
                             MilitarTipoUpd.save()
 
@@ -254,7 +264,7 @@ def escalaEdit(request, id_Militar, id_TipoEscala):
 
             #Exclui Todos Os Serviços do Militar. Também Excluimos Toda a escala em que o Militar Participa, pois ao retirar o Militar alteramos
             #A Folga de toda a escala
-            servicoDel(datetime.now(), form.cleaned_data['Id_Mil'])
+            servicoDel(datetime.now(), MilitarTipo_Object.Id_Mil.id)
 
             return HttpResponseRedirect(reverse('escala'))
         else:
@@ -293,7 +303,7 @@ def EscalaAdd(request, SubTipEscID):
                     Id_TipEsc = Id_SubTipoEscalaInstance.Id_TipEsc,
                 )
 
-                servicoDel(datetime.now(),militar)   #Limpa Todos os Serviços do TipEsc que o Militar Está inserido
+                servicoDel(datetime.now(), militar)   #Limpa Todos os Serviços do TipEsc que o Militar Está inserido
                         
         return HttpResponseRedirect(reverse('escala'))
     else:
@@ -602,8 +612,6 @@ def matrizDel(request):
                 DateBegin = DateBegin + timedelta(days=1)   
             
             servicoDel1(DateBegin) #Exclui todos os serviços apartir de uma data
-
-            return HttpResponseRedirect(reverse('matriz'))
     else:
         form = MatrizDelForm()
 
@@ -678,20 +686,21 @@ def matriz(request):
             if action == "MatrizSearch":
                 MonthOfSearch = int(request.GET['DateOfMatriz'])
                 TipEscOfMatriz = int(request.GET['TipoEscalaOfMatriz'])
-                SelectOfMatriz = MatrizSelectForm(request.POST or None, instance={'DateOfMatriz':MonthOfSearch, 'TipoEscalaOfMatriz': TipEscOfMatriz})
+                SelectOfMatriz = MatrizSelectForm(request.POST or None, {'DateOfMatriz':MonthOfSearch, 'TipoEscalaOfMatriz': TipEscOfMatriz})
+                #SelectOfMatriz = MatrizSelectForm(request.POST or None, request.FILES)
             else:
                 if action == "MatrizAdd":
                     return matrizAdd(request)
                 else:
                     if action == "MatrizDel":
-                        return matrizDel(request)
+                        return HttpResponseRedirect(reverse('matrizDel'))
                     else:
                         if action == "MatrizEdit":
                             return matrizEdit(request)
     else:
         MonthOfSearch = datetime.now().month
         TipEscOfMatriz = 0
-        SelectOfMatriz = MatrizSelectForm()
+        SelectOfMatriz = MatrizSelectForm({'DateOfMatriz':MonthOfSearch, 'TipoEscalaOfMatriz': TipEscOfMatriz})
         
     DateBegin = datetime(datetime.now().year, MonthOfSearch, 1)
     DateEnd =  addMonths(DateBegin, 1)
@@ -786,11 +795,10 @@ def AppendMilitarIntoServico(ListMilitarDispensado, ListMilitaresServico, ListSe
     LenListMilitaresServico = len(ListMilitaresServico)
     if(LenListMilitaresServico > 0):
         #Condição para não Adicionar o Militar que Esta Dispensado nesse Dia
-        while(ListMilitarDispensado.filter(Id_Mil = ListMilitaresServico[xV].id).count() >0):
+        while(ListMilitarDispensado.filter(Id_Mil = ListMilitaresServico[xV].Id_Mil).count() >0):
             #Se o militar não pode ser Escalado, então pegamos o Próximo da Lista Disponível
-            if(LenListMilitaresServico < (xV + 1)):
-                xV = xV + 1
-            else:
+            xV = xV + 1
+            if(LenListMilitaresServico == xV):
                 xV = 0    
 
         #Condição para Verificar se o Militar Ja Está de Serviço em Outro Tipo de Servço
@@ -798,10 +806,9 @@ def AppendMilitarIntoServico(ListMilitarDispensado, ListMilitaresServico, ListSe
         DtBegin = ItemMatrizEscala.Dt_Matriz - timedelta(days=2)
         DtEnd = ItemMatrizEscala.Dt_Matriz
         while(Servico.objects.filter(Id_Matriz__Dt_Matriz__range=[DtBegin,DtEnd], Id_Mil = ListMilitaresServico[xV].Id_Mil).count() > 0):
-            if(LenListMilitaresServico < (xV + 1)):
-                xV = xV + 1
-            else:
-                xV = 0 
+            xV = xV + 1
+            if(LenListMilitaresServico == xV):
+                xV = 0  
 
         #Condição para Verificar se o Militar Já Está de Serviço Na Escala Preta
         #A Condição Deverá Verificar 2 dias Antes. Pois o Intervalo Mínimo de 1 Serviço para Outro é também de 48h
@@ -865,7 +872,7 @@ def BiuldServico(DateBegin, DateEnd, Id_TipEscForm, SubTipoEscalaList, ListServi
             ListTemp = list()
 
             #Lista de Todos os Militares Dispensados Nessa Data
-            ListMilitarDispensado = Militar_Dispensa.objects.filter(Begin_Mil_Disp__gte = ItemMatrizEscala.Dt_Matriz, End_Mil_Disp__lte = ItemMatrizEscala.Dt_Matriz)
+            ListMilitarDispensado = Militar_Dispensa.objects.filter(Begin_Mil_Disp__lte = ItemMatrizEscala.Dt_Matriz, End_Mil_Disp__gte = ItemMatrizEscala.Dt_Matriz)
 
             #Para Cada Item Da Matriz Deve Escalar Um Militar
             x = 0
